@@ -1,0 +1,15 @@
+[project]
+name = "comfyui-jbnodes"
+description = "ComfyUI nodes for creating images with the look and feel of various film stocks."
+version = "0.1.0"
+license = {file = "LICENSE"}
+dependencies = ["numpy", "torch"]
+
+[project.urls]
+Repository = "https://github.com/AlbertJBurton/comfyui-jbnodes"
+#  Used by Comfy Registry https://comfyregistry.org
+
+[tool.comfy]
+PublisherId = "jburton"
+DisplayName = "ComfyUI-JBNodes"
+
