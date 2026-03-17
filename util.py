@@ -21,12 +21,14 @@ def get_srgb_lut():
     return linear_lut.astype(np.float32)
 
 # Generates a Characteristic Curve LUT using a shaped sigmoid.
-# slope: Controls contrast (Gamma). Higher = steeper.
-# toe: Controls shadow compression length. Higher = longer toe (crushed blacks).
-# shoulder: Controls highlight rolloff. Lower = earlier rolloff.
-# precision: The resolution of the output curve (default 1024).
+#
+# Args:
+#   slope: Controls contrast (Gamma). Higher = steeper.
+#   toe: Controls shadow compression length. Higher = longer toe (crushed blacks).
+#   shoulder: Controls highlight rolloff. Lower = earlier rolloff.
+#   precision: The resolution of the output curve (default 1024).
 
-def get_generalized_sigmoid_lut(slope, toe, shoulder, precision=1024):
+def get_generalized_sigmoid_lut(slope, toe, shoulder, precision):
 
     x = np.linspace(0.0, 1.0, precision)
     
@@ -54,9 +56,40 @@ def get_generalized_sigmoid_lut(slope, toe, shoulder, precision=1024):
     
     return lut.astype(np.uint8)
 
+#
+# Generates a luminosity Look-Up Table (LUT).
+#
+# Args:
+#    lum_mask: Array-like containing [a, b, c, f] parameters.
+#    precision: The size of the LUT array (default 256 for 8-bit).
+
+def get_luminosity_lut(lum_mask, precision):
+    
+    x = np.linspace(0.0, 1.0, precision)
+
+    a = lum_mask[0]
+    b = lum_mask[1]
+    c = lum_mask[2]
+    f = lum_mask[3]
+
+    y = (1.0 - f) * ( c * x**a * (1.0 - x)**b ) + f
+    
+    lut = (y).astype(np.uint8) 
+    
+    return lut
+
 def sigmoid(x):
 	output=np.empty_like(x)
 	for i in range(x.shape[0]):
 		for j in range(x.shape[1]):
 			output[i,j] = 1 / (1 + np.exp(-x[i,j]))
 	return output
+
+if __name__ == "__main__":
+    mask = [1.5, 2.0, 1.2, 0.1]
+    precision=1024
+    # Generating a standard 256-value 8-bit LUT
+    my_lut = get_luminosity_lut(mask, precision)
+    print(f"LUT shape: {my_lut.shape}, dtype: {my_lut.dtype}")
+    my_lut = get_generalized_sigmoid_lut(2.2, 0.0, 1.0, precision)
+    print(f"LUT shape: {my_lut.shape}, dtype: {my_lut.dtype}")

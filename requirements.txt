@@ -1,0 +1,7 @@
+numpy
+torch
+os
+json
+colour
+opencv-python
+

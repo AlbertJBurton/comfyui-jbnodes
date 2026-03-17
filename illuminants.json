@@ -1,0 +1,20 @@
+{
+    "sources": [
+        {
+            "label": "Incandescent, Tungsten (2856 K)",
+            "key": "A"
+        },
+        {
+            "label": "Noon Daylight (6500 K)",
+            "key": "D65"
+        },
+        {
+            "label": "Mid-morning, -afternoon Daylight, Flash (5500 K)",
+            "key": "D55"
+        },
+        {
+            "label": "Horizon Light (5000 K)",
+            "key": "D50"
+        }
+    ]
+}

@@ -3,7 +3,7 @@ import numpy as np
 from .util import get_srgb_lut
 
 # Processes an image by linearizing RGB values, applying a spectral weight 
-# dot product, and re-applying a characteristic curve via a high-precision LUT.
+# dot product, and applying a characteristic curve via a high-precision LUT.
 # 
 # Args:
 #     image_data (np.ndarray): Shape (H, W, 3/4) uint8 array.
@@ -11,35 +11,32 @@ from .util import get_srgb_lut
 #     linear_lut (np.ndarray): 256-entry float32 sRGB LUT (Input).
 #     encoding_lut (np.ndarray): High-precision uint8 LUT (Output).
 
-def process_image(image_data, weights, linear_lut, encoding_lut):
+def process_image(image_data, weights, linear_lut, characteristic_lut):
 
     h, w, c = image_data.shape
     # Dynamically handle RGB or RGBA
     pixels = image_data.reshape(-1, c)
     
-    # Extract channels
-    r_raw = pixels[:, 0]
-    g_raw = pixels[:, 1]
-    b_raw = pixels[:, 2]
+    # Extract channels and linearize (Input sRGB -> Linear)
+    r_lin = linear_lut[pixels[:, 0]]
+    g_lin = linear_lut[pixels[:, 1]]
+    b_lin = linear_lut[pixels[:, 2]]
 
-    # 1. Linearize (Input sRGB -> Linear)
-    r_lin = linear_lut[r_raw]
-    g_lin = linear_lut[g_raw]
-    b_lin = linear_lut[b_raw]
-
-    # 2. Apply Spectral Weights (Dot Product)
+    # Apply Spectral Weights (Dot Product)
     latent_lin = (r_lin * weights[0]) + (g_lin * weights[1]) + (b_lin * weights[2])
     
-    # Clip to legal linear range [0, 1]
-    latent_lin = np.clip(latent_lin, 0, 1)
+    # Weights should combine to be [0..1], but we rescale here for edges cases.
+    max_val = np.max(latent_lin)
+    if (max_val > 1.0):
+        latent_lin = latent_lin / max_val if max_val != 0 else latent_lin.astype(np.float32)
 
-    # 3. Apply Characteristic Curve (Linear -> Output sRGB)
+    # Apply Characteristic Curve (Linear -> Output sRGB)
     # Map 0.0-1.0 to the indices of the encoding_lut
-    precision = len(encoding_lut)
+    precision = len(characteristic_lut)
     indices = (latent_lin * (precision - 1)).astype(np.int32)
-    final_pixel = encoding_lut[indices]
+    final_pixel = characteristic_lut[indices]
 
-    # 4. Reconstruct Output
+    # Reconstruct Output
     output = np.empty_like(pixels)
     output[:, 0] = final_pixel  # R
     output[:, 1] = final_pixel  # G
@@ -51,7 +48,15 @@ def process_image(image_data, weights, linear_lut, encoding_lut):
 
     return output.reshape(h, w, c)
 
-def get_spectral_image(image, weights, linear_lut, encoding_lut):
+# Processes a batch of ComfyUI image tensors.
+# 
+# Args:
+#     image (np.ndarray): Shape (H, W, 3/4) uint8 array.
+#     weights (list/tuple): [rW, gW, bW] floats.
+#     linear_lut (np.ndarray): 256-entry float32 sRGB LUT (Input).
+#     encoding_lut (np.ndarray): High-precision uint8 LUT (Output).
+
+def get_spectral_image(image, weights, linear_lut, charateristic_lut):
 
     # ComfyUI tensors are (B, H, W, C)
     batch_size = image.shape[0]
@@ -65,7 +70,7 @@ def get_spectral_image(image, weights, linear_lut, encoding_lut):
         img_np = (img_np * 255).clip(0, 255).astype(np.uint8)
         
         # Process
-        result_np = process_image(img_np, weights, linear_lut, encoding_lut)
+        result_np = process_image(img_np, weights, linear_lut, charateristic_lut)
         
         # Convert back to torch float32 [0, 1]
         result_tensor = torch.from_numpy(result_np).float() / 255.0

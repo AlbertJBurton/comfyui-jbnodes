@@ -35,14 +35,6 @@
           "params": { "slope": 1.6, "toe": 0.25, "shoulder": 0.75 }
         },
         {
-          "id": "ref-ortho",
-          "name": "Reference Ortho",
-          "description": "Orthochromatic: Completely blind to Red light.",
-          "weights": [0.0, 0.6, 0.4],
-          "luminosity_mask": [0.8, 1.5, 4.42, 0.04],
-          "params": { "slope": 1.8, "toe": 0.20, "shoulder": 0.80 }
-        },
-        {
           "id": "ortho-plus",
           "name": "Ilford / Ortho Plus",
           "description": "Modern orthochromatic. Can be handled under red safelight.",
@@ -100,7 +92,7 @@
           "id": "neopan-400",
           "name": "Fuji / Neopan 400 Professional",
           "description": "Traditional grain. Sharp, punchy contrast, and clean highlights.",
-          "weights": [0.25, 0.37, 0.38],
+          "weights": [0.7282, 0.7004, 1.0000],
           "luminosity_mask": [1.2, 1.46, 6.24, 0.036],
           "params": { "slope": 1.9, "toe": 0.18, "shoulder": 0.82 }
         },
@@ -132,7 +124,7 @@
           "id": "plus-x",
           "name": "Kodak / Plus-X 125",
           "description": "Balanced, good red sensitivity.",
-          "weights": [0.29, 0.35, 0.36],
+          "weights": [0.4125, 0.3032, 1.0000],
           "luminosity_mask": [1.2, 1.4, 6.02, 0.036],
           "params": { "slope": 1.9, "toe": 0.18, "shoulder": 0.85 }
         },
@@ -140,7 +132,7 @@
           "id": "tri-x",
           "name": "Kodak / Tri-X 400",
           "description": "Iconic photojournalism film. Lifted shadows in blue light.",
-          "weights": [0.25, 0.35, 0.4],
+          "weights": [0.6305, 0.5314, 1.0000],
           "luminosity_mask": [0.8, 1.5, 4.42, 0.04],
           "params": { "slope": 1.8, "toe": 0.20, "shoulder": 0.80 }
         },
@@ -218,7 +210,7 @@
           "id": "delta-3200",
           "name": "Ilford / Delta / 3200",
           "description": "Higher red weight for push applications.",
-          "weights": [0.31, 0.36, 0.33],
+          "weights": [1.0000, 0.8951, 0.8583],
           "luminosity_mask": [0.5, 1.7, 3.25, 0.06],
           "params": { "slope": 2.0, "toe": 0.30, "shoulder": 0.70 }
         },
@@ -232,15 +224,15 @@
         },
         {
           "id": "acros-100",
-          "name": "Fuji / Neopan Acros 100 II",
+          "name": "Fuji / Neopan 100 Acros",
           "description": "Distinctive 'Acros look'; valley at ~500nm.",
-          "weights": [0.2, 0.44, 0.36],
+          "weights": [1.0000, 0.8492, 0.7540],
           "luminosity_mask": [1.8, 1.3, 8.23, 0.03],
           "params": { "slope": 2.3, "toe": 0.15, "shoulder": 0.90 }
         },
         {
           "id": "adox-chs-100",
-          "name": "Adox CHS 100",
+          "name": "Adox / CHS 100",
           "description": "Reduced red sensitivity.",
           "weights": [0.21, 0.42, 0.37],
           "luminosity_mask": [1.2, 1.4, 6.02, 0.036],
@@ -262,7 +254,7 @@
         },
         {
           "id": "rollei-ir",
-          "name": "Rollei Infrared 400",
+          "name": "Rollei / Infrared 400",
           "description": "Sensitivity extended to ~820 nm.",
           "weights": [0.4, 0.3, 0.3],
           "luminosity_mask": [0.5, 1.6, 3.17, 0.05],
@@ -276,15 +268,31 @@
       "stocks": [
         {
           "id": "bt709",
-          "name": "ITU-R BT.709 Luminance",
+          "name": "Reference / ITU-R BT.709 Luminance",
           "description": "Human photopic vision weighting. Heavily green dominant.",
           "weights": [0.2126, 0.7152, 0.0722],
           "luminosity_mask": [2.8, 1.1, 10.18, 0.0],
           "params": { "slope": 2.2, "toe": 0.0, "shoulder": 1.0 }
         },
         {
+          "id": "bt601",
+          "name": "Reference / ITU-R BT.601 Luminance",
+          "description": "Studio encoding parameters of digital television for standard 4:3 and wide-screen 16:9 aspect ratios ",
+          "weights": [0.299, 0.587, 0.114],
+          "luminosity_mask": [2.8, 1.1, 10.18, 0.0],
+          "params": { "slope": 2.2, "toe": 0.0, "shoulder": 1.0 }
+        },
+        {
+          "id": "ref-ortho",
+          "name": "Reference / Reference Orthochromatic (100% red blind)",
+          "description": "Orthochromatic: Completely blind to Red light.",
+          "weights": [0.0, 0.6, 0.4],
+          "luminosity_mask": [0.8, 1.5, 4.42, 0.04],
+          "params": { "slope": 1.8, "toe": 0.20, "shoulder": 0.80 }
+        },
+        {
           "id": "equal",
-          "name": "Equal Weight",
+          "name": "Reference / Equal Weight",
           "description": "Simple average. standard desaturation.",
           "weights": [0.3333, 0.3333, 0.3334],
           "luminosity_mask": [2.8, 1.1, 10.18, 0.0],
