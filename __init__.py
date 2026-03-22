@@ -1,15 +1,22 @@
-from .nodes import SpectralLab, SpectralLabCustom, FilterLab
+from .nodes import PrintLabGraded, PrintLabMultigrade, SpectralLab, FilterLab, FilmLab, GrayscaleLab
 
 NODE_CLASS_MAPPINGS = {
-    "SpectralLabCustom": SpectralLabCustom,
     "SpectralLab": SpectralLab,
-    "FilterLab": FilterLab
+    "FilterLab": FilterLab,
+    "PrintLabMultigrade": PrintLabMultigrade,
+    "PrintLabGraded": PrintLabGraded,
+    "FilmLab": FilmLab,
+    "GrayscaleLab": GrayscaleLab,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "SpectralLabCustom": "Spectral Lab (Custom)",
-    "SpectralLab": "Spectral Lab (Film Stock)",
-    "FilterLab": "Wratten Filter"
+    "SpectralLabCustom": "JB Spectral Lab (Custom)",
+    "SpectralLab": "JB Film Development",
+    "FilterLab": "JB Wratten Filter",
+    "PrintLabMultigrade": "JB Darkroom Enlarger (Multigrade)",
+    "PrintLabGraded": "JB Darkroom Enlarger (Graded)",
+    "FilmLab": "JB BW Film Stocks",
+    "GrayscaleLab": "JB Image to Grayscale"
 }
 
 __version__ = "0.1.1"

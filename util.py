@@ -1,4 +1,45 @@
+import torch
 import numpy as np
+
+from dataclasses import dataclass, field
+from typing import List, Dict, Optional
+
+@dataclass
+class FilmStock:
+    id: str
+    name: str
+    description: str
+    # Provide safe defaults based on the fallbacks in your nodes.py
+    weights: List[float] = field(default_factory=lambda: [0.33, 0.33, 0.33])
+    luminosity_mask: List[float] = field(default_factory=lambda: [2.8, 1.1, 10.18, 0.0])
+    params: Dict[str, float] = field(default_factory=lambda: {"slope": 1.8, "toe": 0.2, "shoulder": 0.8})
+    # spd is optional since most stocks in your JSON don't have it defined
+    spd: Optional[List[float]] = None 
+
+    @classmethod
+    def from_dict(cls, data: dict):
+        """Creates a FilmStock object from a parsed JSON dictionary."""
+        return cls(
+            id=data.get("id", "unknown"),
+            name=data.get("name", "Unknown Stock"),
+            description=data.get("description", ""),
+            weights=data.get("weights", [0.33, 0.33, 0.33]),
+            luminosity_mask=data.get("luminosity_mask", [2.8, 1.1, 10.18, 0.0]),
+            params=data.get("params", {"slope": 1.8, "toe": 0.2, "shoulder": 0.8}),
+            spd=data.get("spd")
+        )
+
+def srgb_to_linear_torch(tensor):
+    """Vectorized PyTorch sRGB to Linear decoding."""
+    mask = tensor <= 0.04045
+    safe_tensor = torch.clamp(tensor, min=0.0)
+    return torch.where(mask, tensor / 12.92, torch.pow((safe_tensor + 0.055) / 1.055, 2.4))
+
+def linear_to_srgb_torch(tensor):
+    """Vectorized PyTorch Linear to sRGB encoding."""
+    mask = tensor <= 0.0031308
+    safe_tensor = torch.clamp(tensor, min=1e-8)
+    return torch.where(mask, tensor * 12.92, 1.055 * torch.pow(safe_tensor, 1.0 / 2.4) - 0.055)
 
 # Pre-calculate sRGB linearization lookup table for performance
 # Maps 0-255 uint8 input to 0.0-1.0 linear float output
