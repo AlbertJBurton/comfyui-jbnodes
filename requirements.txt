@@ -2,7 +2,7 @@ numpy
 torch
 os
 json
-colour
+colour-science
 opencv-python
 pilgram
 

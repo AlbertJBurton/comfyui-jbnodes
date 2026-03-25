@@ -32,7 +32,9 @@ def pchip_interpolate_torch(x, y, x_new):
     m[-1] = S[-1]
     
     # Evaluate spline at x_new
-    idx = torch.searchsorted(x, x_new) - 1
+    # Explicitly call .contiguous() on the boundary tensor to prevent 
+    # PyTorch memory reallocation warnings and performance hits.
+    idx = torch.searchsorted(x.contiguous(), x_new) - 1
     idx = torch.clamp(idx, 0, len(x) - 2)
     
     x_k = x[idx]

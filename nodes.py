@@ -3,8 +3,11 @@ import os
 import numpy as np
 import torch
 import dataclasses
+import logging
 
 from comfy import model_management
+from server import PromptServer
+from aiohttp import web
 
 from PIL import ImageEnhance, Image
 
@@ -12,7 +15,7 @@ from .filters import get_filter_image
 from .spectral import get_spectral_image
 from .print import get_print_image
 from .grayscale import get_grayscale_image
-from .util import get_srgb_lut, get_generalized_sigmoid_lut, get_luminosity_lut, FilmStock
+from .util import get_generalized_sigmoid_lut, get_hd_curve_lut, get_luminosity_lut, FilmStock, HDCurve
 
 CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
 FILM_STOCK_JSON_PATH = os.path.join(CURRENT_DIR, "film_stocks.json")
@@ -39,6 +42,24 @@ with open(PAPER_JSON_PATH, 'r') as paper:
 
 with open(GRAYSCALE_JSON_PATH, 'r') as grayscale:
     GRAYSCALE_DATA = json.load(grayscale)
+
+# H&D Curves API route
+@PromptServer.instance.routes.get("/jbnodes/get_hd_curves")
+async def get_hd_curves(request):
+    """Returns a list of HD curve names for a given film stock name."""
+    stock_name = request.rel_url.query.get("stock_name", "")
+    curves = ["None"] # Safe default
+    
+    for group in STOCK_DATA.get("film_stock_groups", []):
+        for stock in group.get("stocks", []):
+            if stock.get("name") == stock_name:
+                hd_curves = stock.get("hd_curves", [])
+                if hd_curves:
+                    # Format names as "Developer @ Time mins (Temp C)"
+                    curves = [f"{c['name']} ({c['time']}m at {c['temp']}C)" for c in hd_curves]
+                break
+                
+    return web.json_response(curves)
 
 # Create mappings
 STOCK_MAP = {}
@@ -92,18 +113,36 @@ class FilmLab:
         return {
             "required": { 
                 "film_stock": (STOCK_NAMES, {"default": "Kodak / Tri-X 400"}),
+                "hd_curve": (["None"], ),
             }, 
         }
 
-    RETURN_TYPES = ("FILM_STOCK",)
-    RETURN_NAMES = ("film_stock",)
+    # Bypass ComfyUI's strict dropdown validation for dynamic widgets
+    @classmethod
+    def VALIDATE_INPUTS(s, film_stock, hd_curve):
+        return True
+
+    RETURN_TYPES = ("FILM_STOCK", "HDCURVE")
+    RETURN_NAMES = ("film_stock", "hd_curve")
     FUNCTION = "get_film_stock"
     CATEGORY = "JBNodes"
     DESCRIPTION = """Simulated black and white film stocks."""
 
-    def get_film_stock(self, film_stock):
+    def get_film_stock(self, film_stock, hd_curve):
         stock_data = STOCK_MAP.get(film_stock)
-        return (FilmStock.from_dict(stock_data),)
+        stock = FilmStock.from_dict(stock_data)
+
+        # Re-associate the string from the dropdown with the actual HDCurve object
+        curve = None
+        if stock.hd_curves and hd_curve != "None":
+            for c in stock.hd_curves:
+                # This must perfectly match the string format generated in the API route
+                display_name = f"{c.name} ({c.time}m at {c.temp}C)"
+                if display_name == hd_curve:
+                    curve = c
+                    break
+
+        return (stock, curve)
 
 class PrintLabMultigrade:
     @classmethod
@@ -138,7 +177,7 @@ class PrintLabGraded:
             },
             "optional": {
                 "graded_paper": (GRADED_PAPER_NAMES, {"default": "Ilford / Ilfobrom Galerie FB / Grade 2"}),
-                "exposure_secs": ("FLOAT", {"default": 10.0, "min": 0.0, "max": 20.0, "step": 0.1}),
+                "exposure_secs": ("FLOAT", {"default": 10.0, "min": 0.0, "max": 60.0, "step": 0.1}),
                 "precision": ("INT", {"default": 4096, "min": 256, "max": 65536, "step": 256}),
             },
         }
@@ -183,7 +222,6 @@ class FilterLab:
             "optional": {
                 "filter_factor": ("FLOAT", {"default": 1.00, "min": 0.00, "max": 10.00, "step": 0.01}),
                 "auto_filter_factor": ("BOOLEAN", {"default": False}),
-                "light_source": (SOURCE_NAMES, {"default": "Noon Daylight (6500 K)"}),
             }
         }
 
@@ -193,15 +231,12 @@ class FilterLab:
     CATEGORY = "JBNodes"
     DESCRIPTION = """Apply a Wratten filter to an image."""
 
-    def apply_filter(self, image, filter, filter_factor, auto_filter_factor, light_source):
+    def apply_filter(self, image, filter, filter_factor, auto_filter_factor):
         filter_data = FILTER_MAP.get(filter)
         transmission = filter_data.get("transmission")
         auto_factor = 1.0 / filter_data.get("visual_transmission")
-        
-        source_data = SOURCE_MAP.get(light_source)
-        illuminant_name = source_data["key"]
 
-        return get_filter_image(image, transmission, filter_factor, auto_filter_factor, auto_factor, illuminant_name)
+        return get_filter_image(image, transmission, filter_factor, auto_filter_factor, auto_factor)
 
 class SpectralLab:
     @classmethod
@@ -211,11 +246,15 @@ class SpectralLab:
                 "image": ("IMAGE",),
                 "film_stock": ("FILM_STOCK",), 
                 "developer": (DEVELOPERS, {"default": "Standard (D-76)"}),
+                "light_source": (SOURCE_NAMES, {"default": "Noon Daylight (6500 K)"}),
             },
             "optional": {
+                "hd_curve": ("HDCURVE",),
                 "precision": ("INT", {"default": 1024, "min": 256, "max": 65536, "step": 256}),
                 "contrast_index_offset": ("FLOAT", {"default": 0.0, "min": -1.0, "max": 1.0, "step": 0.01}),
                 "push_pull_stops": ("FLOAT", {"default": 0.0, "min": -5.0, "max": 5.0, "step": 0.1}),
+                "exposure_index": ("FLOAT", {"default": 0.1, "min": 0.0, "max": 1.0, "step": 0.01}),
+                "N_development": ("INT", {"default": 0.0, "min": -3.0, "max": 3.0, "step": 1}),
             }        
         }
 
@@ -225,16 +264,32 @@ class SpectralLab:
     CATEGORY = "JBNodes"
     DESCRIPTION = """Simulate black and white film stocks with customizable development processes."""
 
-    def build_spectral_image(self, image, film_stock, developer, push_pull_stops, contrast_index_offset, precision):
-        stock_data = dataclasses.asdict(film_stock) if isinstance(film_stock, FilmStock) else STOCK_MAP.get(film_stock)
+    def build_spectral_image(self, image, film_stock, developer, light_source, hd_curve=None, precision=1024, contrast_index_offset=0.0, push_pull_stops=0.0, exposure_index=0.1, N_development=0):
+        # Extract data cleanly depending on whether FilmLab passed the object or a string
+        if isinstance(film_stock, FilmStock):
+            weights = film_stock.weights
+            spectral_points = film_stock.spectral_points
+            params = film_stock.params
+            stock_name = film_stock.name
+            
+            # Prioritize the wired HDCURVE from FilmLab. Fallback to the first curve if unwired.
+            if hd_curve:
+                hd_data = hd_curve
+            #elif film_stock.hd_curves:
+            #    hd_data = film_stock.hd_curves[0]
+            else:
+                hd_data = None
+        else:
+            stock_data = STOCK_MAP.get(film_stock, {})
+            weights = stock_data.get("weights", [0.33, 0.33, 0.33])
+            spectral_points = stock_data.get("spectral_points", None)
+            params = stock_data.get("params", {"slope": 1.8, "toe": 0.2, "shoulder": 0.8})
+            stock_name = str(film_stock)
+            hd_data = hd_curve
 
-        weights = stock_data.get("weights", [0.33, 0.33, 0.33])
-        params = stock_data.get("params", {"slope": 1.8, "toe": 0.2, "shoulder": 0.8})
-        lum_mask = stock_data.get("luminosity_mask", [2.8, 1.1, 10.18, 0.0])
-
-        slope = params["slope"]
-        toe = params["toe"]
-        shoulder = params["shoulder"]
+        slope = params.get("slope", 1.8)
+        toe = params.get("toe", 0.2)
+        shoulder = params.get("shoulder", 0.8)
 
         if contrast_index_offset != 0.0:
             ci = 1 / slope
@@ -254,11 +309,20 @@ class SpectralLab:
             toe = 0
 
         slope += (push_pull_stops * 0.1)
+        
+        source_data = SOURCE_MAP.get(light_source)
+        illuminant_name = source_data["key"] if source_data else "D65"
 
-        lin_lut = get_srgb_lut()
-        char_lut = get_generalized_sigmoid_lut(slope, toe, shoulder, precision)
+        if not hd_data:
+            char_lut = get_generalized_sigmoid_lut(slope, toe, shoulder, precision)
+        else:
+            char_lut = get_hd_curve_lut(hd_data, precision, ei=exposure_index, dev_offset=N_development)
+            try:
+                logging.info(f"[SpectralLab] using {stock_name} - {hd_data.name} characteristic curve with EI: {exposure_index}, Dev Offset: {N_development}")
+            except:
+                pass
 
-        return get_spectral_image(image, weights, lin_lut, char_lut)
+        return get_spectral_image(image, weights, spectral_points, illuminant_name, char_lut)
 
 class GrayscaleLab:
     @classmethod

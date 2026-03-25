@@ -10,7 +10,6 @@ NODE_CLASS_MAPPINGS = {
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "SpectralLabCustom": "JB Spectral Lab (Custom)",
     "SpectralLab": "JB Film Development",
     "FilterLab": "JB Wratten Filter",
     "PrintLabMultigrade": "JB Darkroom Enlarger (Multigrade)",
@@ -19,5 +18,8 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "GrayscaleLab": "JB Image to Grayscale"
 }
 
+WEB_DIRECTORY = "./web"
+
 __version__ = "0.1.1"
-__all__ = ["NODE_CLASS_MAPPINGS", "NODE_DISPLAY_NAME_MAPPINGS"]
+__all__ = ["NODE_CLASS_MAPPINGS", "NODE_DISPLAY_NAME_MAPPINGS", "WEB_DIRECTORY"]
+

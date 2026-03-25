@@ -5,20 +5,44 @@ from dataclasses import dataclass, field
 from typing import List, Dict, Optional
 
 @dataclass
+class HDCurve:
+    name: str
+    time: float
+    temp: float
+    curve_points: List[List[float]]
+
+    @classmethod
+    def from_dict(cls, data: dict):
+        """Creates an HDCurve object from a parsed JSON dictionary."""
+        return cls(
+            name=data.get("name", "Unknown Developer"),
+            time=float(data.get("time", 0.0)),
+            temp=float(data.get("temp", 20.0)),
+            curve_points=data.get("curve_points", [])
+        )
+
+@dataclass
 class FilmStock:
     id: str
     name: str
     description: str
-    # Provide safe defaults based on the fallbacks in your nodes.py
+    # Provide safe defaults
     weights: List[float] = field(default_factory=lambda: [0.33, 0.33, 0.33])
     luminosity_mask: List[float] = field(default_factory=lambda: [2.8, 1.1, 10.18, 0.0])
     params: Dict[str, float] = field(default_factory=lambda: {"slope": 1.8, "toe": 0.2, "shoulder": 0.8})
-    # spd is optional since most stocks in your JSON don't have it defined
-    spd: Optional[List[float]] = None 
+    # spectral_points is optional since some stocks in don't have it defined
+    spectral_points: Optional[List[List[float]]] = None 
+    # hd_curves contains H&D plot data for specific developers, times, and temps
+    hd_curves: Optional[List[HDCurve]] = None
 
     @classmethod
     def from_dict(cls, data: dict):
         """Creates a FilmStock object from a parsed JSON dictionary."""
+        
+        # Parse HD curves if they exist in the payload
+        raw_hd_curves = data.get("hd_curves")
+        parsed_hd_curves = [HDCurve.from_dict(c) for c in raw_hd_curves] if raw_hd_curves else None
+
         return cls(
             id=data.get("id", "unknown"),
             name=data.get("name", "Unknown Stock"),
@@ -26,7 +50,8 @@ class FilmStock:
             weights=data.get("weights", [0.33, 0.33, 0.33]),
             luminosity_mask=data.get("luminosity_mask", [2.8, 1.1, 10.18, 0.0]),
             params=data.get("params", {"slope": 1.8, "toe": 0.2, "shoulder": 0.8}),
-            spd=data.get("spd")
+            spectral_points=data.get("spectral_points"),
+            hd_curves=parsed_hd_curves
         )
 
 def srgb_to_linear_torch(tensor):
@@ -97,6 +122,88 @@ def get_generalized_sigmoid_lut(slope, toe, shoulder, precision):
     
     return lut.astype(np.uint8)
 
+def get_hd_curve_lut(hd_curve: HDCurve, precision: int = 1024, ei: float = 0.1, dev_offset: int = 0):
+    """
+    Generates a Characteristic Curve LUT directly from an empirical HDCurve object.
+    
+    Uses the Zone System to map the digital 0.0-1.0 space to a dynamic range 
+    defined by N development (7 stops default). Zone 0 (black point) is mathematically 
+    anchored at the EI density units above base+fog, allowing accurate contrast 
+    index shifts across developments.
+    """
+    if not hd_curve or not hd_curve.curve_points:
+        return np.linspace(0, 255, precision, dtype=np.uint8)
+        
+    points = np.array(hd_curve.curve_points)
+    
+    # Sort points by x-axis (Log Exposure) to ensure deterministic evaluation
+    sorted_indices = np.argsort(points[:, 0])
+    xp = points[sorted_indices, 0]
+    yp = points[sorted_indices, 1]
+    
+    yp_min, yp_max = yp.min(), yp.max()
+    density_range = yp_max - yp_min
+    
+    if density_range <= 0.0:
+        return np.linspace(0, 255, precision, dtype=np.uint8)
+    
+    # Check empirical curve direction. 
+    # Standard densitometry: Exposure UP -> Density UP.
+    # Inverted/Transmission: Exposure UP -> Value DOWN.
+    is_ascending = yp[0] < yp[-1]
+    
+    if is_ascending:
+        # 1. Normalize Density (Y)
+        yp_norm = (yp - yp_min) / density_range
+        # 2. Define Zone 0 (Base+Fog is yp_min)
+        zone_0_target = yp_min + ei
+        idx = np.where(yp >= zone_0_target)[0]
+    else:
+        # 1. Normalize and FLIP Density (Y) so the LUT is always a positive 0.0-1.0 map
+        yp_norm = (yp_max - yp) / density_range
+        # 2. Define Zone 0 (Base+Fog is yp_max in inverted data)
+        zone_0_target = yp_max - ei
+        idx = np.where(yp <= zone_0_target)[0]
+        
+    # Safely find the LogE (xp) corresponding to Zone 0 density
+    xp_start = xp.min() # fallback
+    if len(idx) > 0:
+        first_idx = idx[0]
+        if first_idx > 0:
+            x0, x1 = xp[first_idx - 1], xp[first_idx]
+            y0, y1 = yp[first_idx - 1], yp[first_idx]
+            # Linearly interpolate the exact LogE coordinate for a flawless Zone 0
+            if y1 != y0:
+                xp_start = x0 + (zone_0_target - y0) * (x1 - x0) / (y1 - y0)
+            else:
+                xp_start = x1
+        else:
+            xp_start = xp[first_idx]
+
+    # The Zone System defines N development as 7 stops of dynamic range above Zone 0.
+    # We adjust this based on the dev_offset (e.g. -2 for N-2, +2 for N+2).
+    # 1 stop = log10(2) ≈ 0.30103 LogE units.
+    dynamic_range_stops = 7.0 + dev_offset
+    log_e_stops = dynamic_range_stops * np.log10(2.0)
+    
+    xp_end = xp_start + log_e_stops
+    
+    # 3. Generate LUT over the fixed window
+    x_eval = np.linspace(0.0, 1.0, precision)
+    
+    # Map digital 0.0-1.0 exactly to the [xp_start, xp_end] LogE range
+    xp_eval = xp_start + (x_eval * (xp_end - xp_start))
+    
+    # Interpolate the normalized empirical density at these exact LogE points.
+    # np.interp gracefully handles any xp_eval values extending past the 
+    # original densitometer curve by clamping them to the nearest valid density.
+    y_eval = np.interp(xp_eval, xp, yp_norm)
+    
+    # Scale back to 8-bit space
+    lut = np.clip(y_eval * 255.0, 0, 255).astype(np.float32)
+    
+    return lut.astype(np.uint8)
+
 #
 # Generates a luminosity Look-Up Table (LUT).
 #
@@ -120,11 +227,11 @@ def get_luminosity_lut(lum_mask, precision):
     return lut
 
 def sigmoid(x):
-	output=np.empty_like(x)
-	for i in range(x.shape[0]):
-		for j in range(x.shape[1]):
-			output[i,j] = 1 / (1 + np.exp(-x[i,j]))
-	return output
+    """
+    Vectorized sigmoid function. 
+    Relies on numpy's native C-level broadcasting for optimal speed.
+    """
+    return 1 / (1 + np.exp(-x))
 
 if __name__ == "__main__":
     mask = [1.5, 2.0, 1.2, 0.1]

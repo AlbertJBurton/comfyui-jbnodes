@@ -9,7 +9,7 @@ from .util import srgb_to_linear_torch, linear_to_srgb_torch
 
 from comfy import model_management
 
-def get_filter_image(image, transmission, filter_factor, auto_exposure, auto_factor, illuminant_name):
+def get_filter_image(image, transmission, filter_factor, auto_exposure, auto_factor):
 
     # Retrieve the active ComfyUI PyTorch device (GPU or CPU) for efficient tensor processing.
     device = model_management.get_torch_device()
@@ -21,7 +21,11 @@ def get_filter_image(image, transmission, filter_factor, auto_exposure, auto_fac
     shape = colour.SpectralShape(wl_min, wl_max, wl_step)
     sd_filter = colour.SpectralDistribution(transmission, shape, name="Wratten Filter")
     cmfs = colour.MSDS_CMFS["CIE 1931 2 Degree Standard Observer"].copy().align(shape)
-    illuminant = colour.SDS_ILLUMINANTS[illuminant_name].copy().align(shape)
+    
+    # Optical filter acts purely as a physical modifier.
+    # Therefore, it is permanently anchored to the standard D65 illuminant 
+    # to maintain inter-node sRGB compliance.
+    illuminant = colour.SDS_ILLUMINANTS["D65"].copy().align(shape)
 
     # ---------------------------------------------------------
     # PRECOMPUTE BASES ON CPU (Executes exactly once)
