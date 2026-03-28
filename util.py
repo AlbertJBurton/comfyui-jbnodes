@@ -1,5 +1,9 @@
-import torch
+import json
+import os
 import numpy as np
+import torch
+import dataclasses
+import logging
 
 from dataclasses import dataclass, field
 from typing import List, Dict, Optional
@@ -13,7 +17,7 @@ class HDCurve:
 
     @classmethod
     def from_dict(cls, data: dict):
-        """Creates an HDCurve object from a parsed JSON dictionary."""
+
         return cls(
             name=data.get("name", "Unknown Developer"),
             time=float(data.get("time", 0.0)),
@@ -37,7 +41,6 @@ class FilmStock:
 
     @classmethod
     def from_dict(cls, data: dict):
-        """Creates a FilmStock object from a parsed JSON dictionary."""
         
         # Parse HD curves if they exist in the payload
         raw_hd_curves = data.get("hd_curves")
@@ -52,6 +55,22 @@ class FilmStock:
             params=data.get("params", {"slope": 1.8, "toe": 0.2, "shoulder": 0.8}),
             spectral_points=data.get("spectral_points"),
             hd_curves=parsed_hd_curves
+        )
+
+@dataclass
+class Camera:
+    name: str
+    film_factor: int
+    illuminant_key: Optional[str] = "D65"
+    film_stock: Optional[FilmStock] = None
+    image: Optional[torch.Tensor] = None
+
+    @classmethod
+    def from_dict(cls, data: dict):
+
+        return cls(
+            name = data.get("name", "Unknown Camera"),
+            film_factor = int(data.get("film_factor", 0)),
         )
 
 def srgb_to_linear_torch(tensor):
@@ -122,15 +141,15 @@ def get_generalized_sigmoid_lut(slope, toe, shoulder, precision):
     
     return lut.astype(np.uint8)
 
-def get_hd_curve_lut(hd_curve: HDCurve, precision: int = 1024, ei: float = 0.1, dev_offset: int = 0):
-    """
-    Generates a Characteristic Curve LUT directly from an empirical HDCurve object.
-    
-    Uses the Zone System to map the digital 0.0-1.0 space to a dynamic range 
-    defined by N development (7 stops default). Zone 0 (black point) is mathematically 
-    anchored at the EI density units above base+fog, allowing accurate contrast 
-    index shifts across developments.
-    """
+
+# Generates a Characteristic Curve LUT directly from an empirical HDCurve object.
+#   
+# Uses the Zone System to map the digital 0.0-1.0 space to a dynamic range 
+# defined by N development (7 stops default). Zone 0 (black point) is mathematically 
+# anchored at the EI density units above base+fog, allowing accurate contrast 
+# index shifts across developments.
+
+def get_hd_curve_lut(hd_curve: HDCurve, precision: int = 4096, ei: float = 0.1, dev_offset: int = 0):
     if not hd_curve or not hd_curve.curve_points:
         return np.linspace(0, 255, precision, dtype=np.uint8)
         
