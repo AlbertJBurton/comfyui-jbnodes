@@ -8,70 +8,7 @@ import logging
 from dataclasses import dataclass, field
 from typing import List, Dict, Optional
 
-@dataclass
-class HDCurve:
-    name: str
-    time: float
-    temp: float
-    curve_points: List[List[float]]
-
-    @classmethod
-    def from_dict(cls, data: dict):
-
-        return cls(
-            name=data.get("name", "Unknown Developer"),
-            time=float(data.get("time", 0.0)),
-            temp=float(data.get("temp", 20.0)),
-            curve_points=data.get("curve_points", [])
-        )
-
-@dataclass
-class FilmStock:
-    id: str
-    name: str
-    description: str
-    # Provide safe defaults
-    weights: List[float] = field(default_factory=lambda: [0.33, 0.33, 0.33])
-    luminosity_mask: List[float] = field(default_factory=lambda: [2.8, 1.1, 10.18, 0.0])
-    params: Dict[str, float] = field(default_factory=lambda: {"slope": 1.8, "toe": 0.2, "shoulder": 0.8})
-    # spectral_points is optional since some stocks in don't have it defined
-    spectral_points: Optional[List[List[float]]] = None 
-    # hd_curves contains H&D plot data for specific developers, times, and temps
-    hd_curves: Optional[List[HDCurve]] = None
-
-    @classmethod
-    def from_dict(cls, data: dict):
-        
-        # Parse HD curves if they exist in the payload
-        raw_hd_curves = data.get("hd_curves")
-        parsed_hd_curves = [HDCurve.from_dict(c) for c in raw_hd_curves] if raw_hd_curves else None
-
-        return cls(
-            id=data.get("id", "unknown"),
-            name=data.get("name", "Unknown Stock"),
-            description=data.get("description", ""),
-            weights=data.get("weights", [0.33, 0.33, 0.33]),
-            luminosity_mask=data.get("luminosity_mask", [2.8, 1.1, 10.18, 0.0]),
-            params=data.get("params", {"slope": 1.8, "toe": 0.2, "shoulder": 0.8}),
-            spectral_points=data.get("spectral_points"),
-            hd_curves=parsed_hd_curves
-        )
-
-@dataclass
-class Camera:
-    name: str
-    film_factor: int
-    illuminant_key: Optional[str] = "D65"
-    film_stock: Optional[FilmStock] = None
-    image: Optional[torch.Tensor] = None
-
-    @classmethod
-    def from_dict(cls, data: dict):
-
-        return cls(
-            name = data.get("name", "Unknown Camera"),
-            film_factor = int(data.get("film_factor", 0)),
-        )
+from .classes import FilmFormat, HDCurve, FilmStock
 
 def srgb_to_linear_torch(tensor):
     """Vectorized PyTorch sRGB to Linear decoding."""
@@ -84,6 +21,122 @@ def linear_to_srgb_torch(tensor):
     mask = tensor <= 0.0031308
     safe_tensor = torch.clamp(tensor, min=1e-8)
     return torch.where(mask, tensor * 12.92, 1.055 * torch.pow(safe_tensor, 1.0 / 2.4) - 0.055)
+
+def pchip_interpolate_torch(x, y, x_new):
+    """
+    Batched Monotone Cubic Spline (Fritsch-Carlson) natively in PyTorch.
+    Ensures that interpolated points strictly follow the trajectory of the 
+    data without overshooting (which preserves the true toe/shoulder roll-off).
+    """
+    dx = x[1:] - x[:-1]
+    dy = y[1:] - y[:-1]
+    
+    # Secant slopes
+    S = dy / dx
+    
+    m = torch.zeros_like(x)
+    
+    # Interior points: harmonic mean of adjacent secants
+    mask = S[:-1] * S[1:] > 0
+    w1 = 2 * dx[1:] + dx[:-1]
+    w2 = dx[1:] + 2 * dx[:-1]
+    
+    m[1:-1] = torch.where(
+        mask,
+        (w1 + w2) / (w1 / S[:-1] + w2 / S[1:]),
+        torch.zeros_like(S[:-1])
+    )
+    
+    # Endpoints (standard finite difference)
+    m[0] = S[0]
+    m[-1] = S[-1]
+    
+    # Evaluate spline at x_new
+    # Explicitly call .contiguous() on the boundary tensor to prevent 
+    # PyTorch memory reallocation warnings and performance hits.
+    idx = torch.searchsorted(x.contiguous(), x_new) - 1
+    idx = torch.clamp(idx, 0, len(x) - 2)
+    
+    x_k = x[idx]
+    y_k = y[idx]
+    m_k = m[idx]
+    dx_k = dx[idx]
+    
+    m_k1 = m[idx + 1]
+    y_k1 = y[idx + 1]
+    
+    t = (x_new - x_k) / dx_k
+    t2 = t * t
+    t3 = t2 * t
+    
+    # Hermite basis functions
+    h00 = 2*t3 - 3*t2 + 1
+    h10 = t3 - 2*t2 + t
+    h01 = -2*t3 + 3*t2
+    h11 = t3 - t2
+    
+    y_new = h00 * y_k + h10 * dx_k * m_k + h01 * y_k1 + h11 * dx_k * m_k1
+    return y_new
+
+def pchip_interpolate_numpy(x, y, x_new):
+    """
+    Monotone Cubic Spline (Fritsch-Carlson) in NumPy.
+    Runs on the CPU to generate a high-precision, non-ringing 
+    spectral power distribution from empirical coordinates.
+    """
+    dx = np.diff(x)
+    dy = np.diff(y)
+    S = dy / dx
+
+    m = np.zeros_like(x)
+    mask = S[:-1] * S[1:] > 0
+    w1 = 2 * dx[1:] + dx[:-1]
+    w2 = dx[1:] + 2 * dx[:-1]
+
+    m[1:-1][mask] = (w1[mask] + w2[mask]) / (w1[mask] / S[:-1][mask] + w2[mask] / S[1:][mask])
+    m[0] = S[0]
+    m[-1] = S[-1]
+
+    idx = np.searchsorted(x, x_new) - 1
+    idx = np.clip(idx, 0, len(x) - 2)
+
+    x_k = x[idx]
+    y_k = y[idx]
+    m_k = m[idx]
+    dx_k = dx[idx]
+
+    m_k1 = m[idx + 1]
+    y_k1 = y[idx + 1]
+
+    t = (x_new - x_k) / dx_k
+    t2 = t * t
+    t3 = t2 * t
+
+    h00 = 2*t3 - 3*t2 + 1
+    h10 = t3 - 2*t2 + t
+    h01 = -2*t3 + 3*t2
+    h11 = t3 - t2
+
+    y_new = h00 * y_k + h10 * dx_k * m_k + h01 * y_k1 + h11 * dx_k * m_k1
+    
+    # Zero out any values outside the original empirical range 
+    # to prevent artificial sensitivity tails in the UV/IR bands.
+    y_new[x_new < x[0]] = 0.0
+    y_new[x_new > x[-1]] = 0.0
+    
+    # Physical sensitivity cannot be negative
+    return np.maximum(y_new, 0.0)
+
+def apply_1d_lut(tensor, lut):
+    """
+    Applies a 1D PyTorch tensor LUT to an image tensor using linear interpolation.
+    """
+    N = lut.shape[0]
+    x_scaled = tensor * (N - 1)
+    x_floor = x_scaled.floor().long()
+    x_ceil = torch.clamp(x_floor + 1, max=N - 1)
+    weight = x_scaled - x_floor.float()
+    return torch.lerp(lut[x_floor], lut[x_ceil], weight)
 
 # Pre-calculate sRGB linearization lookup table for performance
 # Maps 0-255 uint8 input to 0.0-1.0 linear float output

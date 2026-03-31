@@ -4,57 +4,10 @@ import colour
 
 from colour.recovery import RGB_to_sd_Smits1999
 
-from .util import srgb_to_linear_torch
+from .util import linear_to_srgb_torch, srgb_to_linear_torch, pchip_interpolate_numpy
+from .classes import FilmFormat, HDCurve, FilmStock
+
 from comfy import model_management
-
-def pchip_interpolate_numpy(x, y, x_new):
-    """
-    Monotone Cubic Spline (Fritsch-Carlson) in NumPy.
-    Runs on the CPU to generate a high-precision, non-ringing 
-    spectral power distribution from empirical coordinates.
-    """
-    dx = np.diff(x)
-    dy = np.diff(y)
-    S = dy / dx
-
-    m = np.zeros_like(x)
-    mask = S[:-1] * S[1:] > 0
-    w1 = 2 * dx[1:] + dx[:-1]
-    w2 = dx[1:] + 2 * dx[:-1]
-
-    m[1:-1][mask] = (w1[mask] + w2[mask]) / (w1[mask] / S[:-1][mask] + w2[mask] / S[1:][mask])
-    m[0] = S[0]
-    m[-1] = S[-1]
-
-    idx = np.searchsorted(x, x_new) - 1
-    idx = np.clip(idx, 0, len(x) - 2)
-
-    x_k = x[idx]
-    y_k = y[idx]
-    m_k = m[idx]
-    dx_k = dx[idx]
-
-    m_k1 = m[idx + 1]
-    y_k1 = y[idx + 1]
-
-    t = (x_new - x_k) / dx_k
-    t2 = t * t
-    t3 = t2 * t
-
-    h00 = 2*t3 - 3*t2 + 1
-    h10 = t3 - 2*t2 + t
-    h01 = -2*t3 + 3*t2
-    h11 = t3 - t2
-
-    y_new = h00 * y_k + h10 * dx_k * m_k + h01 * y_k1 + h11 * dx_k * m_k1
-    
-    # Zero out any values outside the original empirical range 
-    # to prevent artificial sensitivity tails in the UV/IR bands.
-    y_new[x_new < x[0]] = 0.0
-    y_new[x_new > x[-1]] = 0.0
-    
-    # Physical sensitivity cannot be negative
-    return np.maximum(y_new, 0.0)
 
 # Processes a batch of ComfyUI image tensors natively in PyTorch.
 # Utilizes Smits 1999 spectral integration when raw coordinate data is available.
@@ -182,6 +135,7 @@ def get_spectral_image(image, weights, spectral_points, illuminant_name, char_lu
 
     # Reconstruct Output (Broadcast 1D to 3 channels)
     out_rgb = final_pixel.unsqueeze(-1).expand(*final_pixel.shape, 3)
+    out_rgb = linear_to_srgb_torch(out_rgb)
 
     if has_alpha:
         stacked_output = torch.cat([out_rgb, alpha], dim=-1)
@@ -300,11 +254,11 @@ def get_camera_image(image, camera):
             
     # Reconstruct Output (Broadcast 1D back to 3 channels)
     out_rgb = latent_lin.unsqueeze(-1).expand(*latent_lin.shape, 3)
+    out_rgb = linear_to_srgb_torch(out_rgb)
 
     if has_alpha:
         stacked_output = torch.cat([out_rgb, alpha], dim=-1)
     else:
         stacked_output = out_rgb
 
-    # Return exactly 1 element in the tuple
     return stacked_output.cpu()

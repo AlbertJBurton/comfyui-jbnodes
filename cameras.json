@@ -2,7 +2,23 @@
     "cameras": [
         {
             "name": "Mamiya RB67",
-            "film_factor": 1
+            "film_size": "120 (6x7)"
+        },
+        {
+            "name": "Canon AE-1",
+            "film_size": "135"
+        },
+        {
+            "name": "Canon A-1",
+            "film_size": "135"
+        },
+        {
+            "name": "Mamiya 645",
+            "film_size": "120 (6x4.5)"
+        },
+        {
+            "name": "Mamiya C330F",
+            "film_size": "120 (6x6)"
         }
     ]
 }

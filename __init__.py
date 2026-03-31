@@ -1,4 +1,4 @@
-from .nodes import PrintLabGraded, PrintLabMultigrade, SpectralLab, FilterLab, FilmLab, GrayscaleLab, CameraLab, ShaderLab
+from .nodes import PrintLabGraded, PrintLabMultigrade, SpectralLab, FilterLab, FilmLab, GrayscaleLab, CameraLab, ShaderLab, CropFilmAspectRatio, FilmAspectRatio
 
 NODE_CLASS_MAPPINGS = {
     "SpectralLab": SpectralLab,
@@ -9,6 +9,8 @@ NODE_CLASS_MAPPINGS = {
     "GrayscaleLab": GrayscaleLab,
     "CameraLab": CameraLab,
     "ShaderLab": ShaderLab,
+    "CropFilmAspectRatio": CropFilmAspectRatio,
+    "FilmAspectRatio": FilmAspectRatio,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
@@ -20,6 +22,8 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "GrayscaleLab": "JB Grayscale Image",
     "CameraLab": "JB Camera",
     "ShaderLab": "JB Film Grain",
+    "CropFilmAspectRatio": "JB Crop Film Aspect Ratio",
+    "FilmAspectRatio": "JB Film Aspect Ratio",
 }
 
 WEB_DIRECTORY = "./web"
