@@ -117,7 +117,7 @@ def get_filter_image(image, transmission, filter_factor, auto_exposure, auto_fac
     )
 
     # Apply exposure compensation
-    if not auto_exposure:
+    if auto_exposure == False:
         out_lin = out_lin * filter_factor
     else:
         out_lin = out_lin * auto_factor

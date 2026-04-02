@@ -34,7 +34,6 @@ GRAYSCALE_JSON_PATH = os.path.join(CURRENT_DIR, "grayscale.json")
 CAMERA_JSON_PATH = os.path.join(CURRENT_DIR, "cameras.json")
 SHADER_PATH = os.path.join(CURRENT_DIR, "film_grain.glsl")
 
-
 with open(FILM_STOCK_JSON_PATH, 'r') as film:
     STOCK_DATA = json.load(film)
 
@@ -61,7 +60,7 @@ with open(GRAYSCALE_JSON_PATH, 'r') as grayscale:
 async def get_hd_curves(request):
     """Returns a list of HD curve names for a given film stock name."""
     stock_name = request.rel_url.query.get("stock_name", "")
-    curves = ["None"] # Safe default
+    curves = ["None"] # default
     
     for group in STOCK_DATA.get("film_stock_groups", []):
         for stock in group.get("stocks", []):
@@ -96,9 +95,21 @@ for grayscale in GRAYSCALE_DATA["grayscale"]:
 
 FILTER_MAP = {}
 FILTER_NAMES = []
+FILTER_MAP["None"] = None
+FILTER_NAMES.append("None")
 for filter in FILTER_DATA["filters"]:
     FILTER_MAP[filter["name"]] = filter
     FILTER_NAMES.append(filter["name"])
+
+BW_FILTER_MAP = {}
+BW_FILTER_NAMES = []
+BW_FILTER_MAP["None"] = None
+BW_FILTER_NAMES.append("None")
+for filter in FILTER_DATA["filters"]:
+    if filter.get("id") in [8, 11, 15, 25, 29, 47]: 
+        name = filter["name"].split("/")[-1].strip()
+        BW_FILTER_MAP[name] = filter
+        BW_FILTER_NAMES.append(name)
 
 SOURCE_MAP = {}
 SOURCE_NAMES = []
@@ -124,14 +135,6 @@ for camera in CAMERA_DATA["cameras"]:
     CAMERA_MAP[camera["name"]] = camera
     CAMERA_NAMES.append(camera["name"])
 
-DEVELOPERS = [
-    "None", 
-    "Standard (D-76)", 
-    "Contrast (HC-110)", 
-    "Acutance (Rodinal)", 
-    "Fine Grain (Xtol)"
-]
-
 RESOLUTIONS = [
     "Standard", 
     "High Resolution", 
@@ -154,7 +157,7 @@ class FilmAspectRatio:
     RETURN_TYPES = ("FLOAT", "FLOAT", "FLOAT", "LATENT")
     RETURN_NAMES = ("width", "height", "aspect_ratio", "empty_latent")
     FUNCTION = "get_aspect_ratio"
-    CATEGORY = "JBNodes"
+    CATEGORY = "JBNodes/Utility"
     DESCRIPTION = """Get a latent image with the aspect ratio of a specific film format."""
 
     def get_aspect_ratio(self, film_size, resolution, swap_dimensions, batch_size):
@@ -194,7 +197,7 @@ class CropFilmAspectRatio:
     RETURN_TYPES = ("IMAGE",)
     RETURN_NAMES = ("image",)
     FUNCTION = "enforce_aspect_ratio"
-    CATEGORY = "JBNodes"
+    CATEGORY = "JBNodes/Utility"
     DESCRIPTION = """Crop the image to match the aspect ratio of a specific film format."""
 
     def enforce_aspect_ratio(self, image, film_size, orientation, shift):
@@ -252,8 +255,9 @@ class CameraLab:
         return {
             "required": { 
                 "image": ("IMAGE",),
-                "camera": (CAMERA_NAMES, {"default": "Mamiya RB67"}),
-                "film": (STOCK_NAMES, {"default": "Kodak / Tri-X 400"}),
+                "camera": (CAMERA_NAMES, {}),
+                "filter": (BW_FILTER_NAMES, {"default": "None"}),
+                "film": (STOCK_NAMES, {}),
                 "film_size": (FILM_SIZE_NAMES, {}),
             },
             "optional": {
@@ -261,13 +265,13 @@ class CameraLab:
             }
         }
 
-    RETURN_TYPES = ("CAMERA", "IMAGE", "STRING")
-    RETURN_NAMES = ("camera_image", "preview", "film_size")
+    RETURN_TYPES = ("CAMERA", "IMAGE")
+    RETURN_NAMES = ("camera", "preview")
     FUNCTION = "get_camera"
     CATEGORY = "JBNodes"
     DESCRIPTION = """Classic black-and-white film cameras."""
 
-    def get_camera(self, image, camera, film, light_source, film_size):
+    def get_camera(self, image, camera, filter, film, light_source, film_size):
         camera_obj = Camera.from_dict(CAMERA_MAP.get(camera))
 
         film_obj = FilmStock.from_dict(STOCK_MAP.get(film))
@@ -279,47 +283,20 @@ class CameraLab:
         film_width = 36.0 if film_size == "135" else (70.0 if film_size == "120" else (120.0 if film_size == "4x5" else 240.0))
         camera_obj.film_width = film_width
 
-        camera_obj.image = get_camera_image(image, camera_obj)
+        if filter != "None":
+            filter_data = BW_FILTER_MAP.get(filter)
+            if filter_data:
+                transmission = filter_data.get("transmission")
+                auto_factor = 1.0 / filter_data.get("visual_transmission")
+                image = get_filter_image(image, transmission, 1.0, True, auto_factor)
+                if isinstance(image, tuple):
+                    image = image[0] if len(image) > 0 else image
 
-        return(camera_obj, camera_obj.image, film_size)
+        camera_image, preview = get_camera_image(image, camera_obj)
+        camera_obj.image = camera_image
+
+        return(camera_obj, preview)
     
-class FilmLab:
-    @classmethod
-    def INPUT_TYPES(s):
-        return {
-            "required": { 
-                "film_stock": (STOCK_NAMES, {"default": "Kodak / Tri-X 400"}),
-                "hd_curve": (["None"], ),
-            }, 
-        }
-    
-    # Bypass ComfyUI's strict dropdown validation for dynamic widgets
-    @classmethod
-    def VALIDATE_INPUTS(s, film_stock, hd_curve):
-        return True
-
-    RETURN_TYPES = ("FILM_STOCK", "HDCURVE")
-    RETURN_NAMES = ("film_stock", "hd_curve")
-    FUNCTION = "get_film_stock"
-    CATEGORY = "JBNodes"
-    DESCRIPTION = """Simulated black and white film stocks."""
-
-    def get_film_stock(self, film_stock, hd_curve):
-        stock_data = STOCK_MAP.get(film_stock)
-        stock = FilmStock.from_dict(stock_data)
-
-        # Re-associate the string from the dropdown with the actual HDCurve object
-        curve = None
-        if stock.hd_curves and hd_curve != "None":
-            for c in stock.hd_curves:
-                # This must perfectly match the string format generated in the API route
-                display_name = f"{c.name} ({c.time}m at {c.temp}C)"
-                if display_name == hd_curve:
-                    curve = c
-                    break
-
-        return (stock, curve)
-
 class PrintLabMultigrade:
     @classmethod
     def INPUT_TYPES(s):
@@ -409,30 +386,34 @@ class FilterLab:
 
     def apply_filter(self, image, filter, filter_factor, auto_filter_factor):
         filter_data = FILTER_MAP.get(filter)
+        if not filter_data:
+            return (image,) 
+        
         transmission = filter_data.get("transmission")
         auto_factor = 1.0 / filter_data.get("visual_transmission")
 
         return get_filter_image(image, transmission, filter_factor, auto_filter_factor, auto_factor)
 
-class SpectralLab:
+class DeveloperLab:
     @classmethod
     def INPUT_TYPES(s):
         return {
             "required": { 
                 "image": ("IMAGE",),
-                "film_stock": ("FILM_STOCK",), 
-                "developer": (DEVELOPERS, {"default": "Standard (D-76)"}),
-                "light_source": (SOURCE_NAMES, {"default": "Noon Daylight (6500 K)"}),
+                "camera": ("CAMERA",),
+                "developer": (["None"], ),
             },
             "optional": {
-                "hd_curve": ("HDCURVE",),
                 "precision": ("INT", {"default": 4096, "min": 256, "max": 65536, "step": 256}),
-                "contrast_index_offset": ("FLOAT", {"default": 0.0, "min": -1.0, "max": 1.0, "step": 0.01}),
-                "push_pull_stops": ("FLOAT", {"default": 0.0, "min": -5.0, "max": 5.0, "step": 0.1}),
-                "exposure_index": ("FLOAT", {"default": 0.1, "min": 0.0, "max": 1.0, "step": 0.01}),
+                "exposure_index": ("FLOAT", {"default": 0.03, "min": 0.00, "max": 1.00, "step": 0.01}),
                 "N_development": ("INT", {"default": 0.0, "min": -3.0, "max": 3.0, "step": 1}),
             }        
         }
+
+    # Bypass ComfyUI's strict dropdown validation for dynamic widgets
+    @classmethod
+    def VALIDATE_INPUTS(s, developer):
+        return True
 
     RETURN_TYPES = ("IMAGE", "IMAGE")
     RETURN_NAMES = ("preview", "film_negative")
@@ -440,62 +421,50 @@ class SpectralLab:
     CATEGORY = "JBNodes"
     DESCRIPTION = """Simulate black and white film stocks with customizable development processes."""
 
-    def build_spectral_image(self, image, film_stock, developer, light_source, hd_curve=None, precision=1024, contrast_index_offset=0.0, push_pull_stops=0.0, exposure_index=0.1, N_development=0):
-        # Extract data cleanly depending on whether FilmLab passed the object or a string
+    def build_spectral_image(self, image, camera, precision, exposure_index, N_development, developer = None):
+        
+        if isinstance(camera, Camera):
+            film_stock = camera.film_stock
+            illuminant_key = camera.illuminant_key
+        else:
+            return (None, None) 
+        
         if isinstance(film_stock, FilmStock):
             weights = film_stock.weights
             spectral_points = film_stock.spectral_points
             params = film_stock.params
             stock_name = film_stock.name
-            
-            if hd_curve:
-                hd_data = hd_curve
-            else:
-                hd_data = None
         else:
             stock_data = STOCK_MAP.get(film_stock, {})
             weights = stock_data.get("weights", [0.33, 0.33, 0.33])
             spectral_points = stock_data.get("spectral_points", None)
             params = stock_data.get("params", {"slope": 1.8, "toe": 0.2, "shoulder": 0.8})
             stock_name = str(film_stock)
-            hd_data = hd_curve
+
+        # Re-associate the string from the dropdown with the actual HDCurve object
+        curve = None
+        if film_stock.hd_curves and developer != "None":
+            for c in film_stock.hd_curves:
+                # This must perfectly match the string format generated in the API route
+                display_name = f"{c.name} ({c.time}m at {c.temp}C)"
+                if display_name == developer:
+                    curve = c
+                    break
 
         slope = params.get("slope", 1.8)
         toe = params.get("toe", 0.2)
         shoulder = params.get("shoulder", 0.8)
 
-        if contrast_index_offset != 0.0:
-            ci = 1 / slope
-            slope = 1 / (ci + contrast_index_offset)
-            
-        if "Contrast" in developer:
-            slope += 0.2
-            toe = max(0.0, toe - 0.05)
-        elif "Acutance" in developer:
-            slope = max(0.1, slope - 0.05)
-            shoulder = max(0.0, shoulder - 0.10)
-        elif "Fine Grain" in developer:
-            slope = max(0.1, slope - 0.10)
-            toe += 0.05
-        elif "None" in developer:
-            slope = 2.2
-            toe = 0
-
-        slope += (push_pull_stops * 0.1)
-        
-        source_data = SOURCE_MAP.get(light_source)
-        illuminant_name = source_data["key"] if source_data else "D65"
-
-        if not hd_data:
+        if not curve:
             char_lut = get_generalized_sigmoid_lut(slope, toe, shoulder, precision)
         else:
-            char_lut = get_hd_curve_lut(hd_data, precision, ei=exposure_index, dev_offset=N_development)
+            char_lut = get_hd_curve_lut(curve, precision, ei=exposure_index, dev_offset=N_development)
             try:
-                logging.info(f"[comfyui-jbnodes] applying {stock_name} - {hd_data.name} characteristic curve with EI: {exposure_index}, Dev Offset: {N_development}")
+                logging.info(f"[comfyui-jbnodes] applying {stock_name} - {curve.name} characteristic curve with EI: {exposure_index}, Dev Offset: {N_development}")
             except:
                 pass
 
-        return get_spectral_image(image, weights, spectral_points, illuminant_name, char_lut)
+        return get_spectral_image(image, weights, None, illuminant_key, char_lut)
 
 class GrayscaleLab:
     @classmethod
@@ -510,7 +479,7 @@ class GrayscaleLab:
     RETURN_TYPES = ("IMAGE",)
     RETURN_NAMES = ("image",)
     FUNCTION = "build_grayscale_image"
-    CATEGORY = "JBNodes"
+    CATEGORY = "JBNodes/Utility"
     DESCRIPTION = """Create a grayscale image with a specific sprectral curve."""
 
     def build_grayscale_image(self, image, method):
@@ -518,7 +487,7 @@ class GrayscaleLab:
         weights = grayscale_data.get("weights", [0.33, 0.33, 0.33])       
         return get_grayscale_image(image, weights)
     
-class ShaderLab:
+class FilmGrainLab:
     @classmethod
     def INPUT_TYPES(s):
         return {

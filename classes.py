@@ -9,6 +9,20 @@ from dataclasses import dataclass, field
 from typing import List, Dict, Optional
 
 @dataclass
+class LatentSize:
+    name: str
+    width: int
+    height: int
+
+    @classmethod
+    def from_dict(cls, data: dict):
+        return cls(
+            name=data.get("name", "Default Size"),
+            width=int(data.get("width", 512)),
+            height=int(data.get("height", 512))
+        )
+
+@dataclass
 class FilmFormat:
     name: str
     description: str
@@ -21,7 +35,7 @@ class FilmFormat:
             name = data.get("name", "Unknown Format"),
             description = data.get("description", ""),
             frame_size = data.get("frame_size", [1.0, 1.0]),
-            latent_sizes = data.get("latent_sizes", [])
+            latent_sizes = [LatentSize.from_dict(size) for size in data.get("latent_sizes", [])] if data.get("latent_sizes") else None
         )
 
 @dataclass
@@ -78,7 +92,6 @@ class Camera:
     name: str
     illuminant_key: str
     film_stock: Optional[FilmStock] = None
-    film_width: Optional[float] = None
     image: Optional[torch.Tensor] = None
 
     @classmethod
@@ -88,7 +101,6 @@ class Camera:
             name = data.get("name", "Unknown Camera"),
             illuminant_key = data.get("illuminant_key", "D65"),
             film_stock = None,  # To be set later when we have the FilmStock object
-            film_width = None,  # To be set later based on user input
-            image = None       # To be set later when we load the image tensor
+            image = None        # To be set later when we load the image tensor
         )
 

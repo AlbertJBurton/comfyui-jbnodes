@@ -203,6 +203,7 @@ def get_generalized_sigmoid_lut(slope, toe, shoulder, precision):
 # index shifts across developments.
 
 def get_hd_curve_lut(hd_curve: HDCurve, precision: int = 4096, ei: float = 0.1, dev_offset: int = 0):
+    
     if not hd_curve or not hd_curve.curve_points:
         return np.linspace(0, 255, precision, dtype=np.uint8)
         
@@ -219,23 +220,13 @@ def get_hd_curve_lut(hd_curve: HDCurve, precision: int = 4096, ei: float = 0.1, 
     if density_range <= 0.0:
         return np.linspace(0, 255, precision, dtype=np.uint8)
     
-    # Check empirical curve direction. 
     # Standard densitometry: Exposure UP -> Density UP.
-    # Inverted/Transmission: Exposure UP -> Value DOWN.
-    is_ascending = yp[0] < yp[-1]
-    
-    if is_ascending:
-        # 1. Normalize Density (Y)
-        yp_norm = (yp - yp_min) / density_range
-        # 2. Define Zone 0 (Base+Fog is yp_min)
-        zone_0_target = yp_min + ei
-        idx = np.where(yp >= zone_0_target)[0]
-    else:
-        # 1. Normalize and FLIP Density (Y) so the LUT is always a positive 0.0-1.0 map
-        yp_norm = (yp_max - yp) / density_range
-        # 2. Define Zone 0 (Base+Fog is yp_max in inverted data)
-        zone_0_target = yp_max - ei
-        idx = np.where(yp <= zone_0_target)[0]
+    # 1. Normalize Density (Y)
+    yp_norm = (yp - yp_min) / density_range
+
+    # 2. Define Zone 0 (Base+Fog is yp_min)
+    zone_0_target = yp_min + ei
+    idx = np.where(yp >= zone_0_target)[0]
         
     # Safely find the LogE (xp) corresponding to Zone 0 density
     xp_start = xp.min() # fallback
@@ -255,7 +246,8 @@ def get_hd_curve_lut(hd_curve: HDCurve, precision: int = 4096, ei: float = 0.1, 
     # The Zone System defines N development as 7 stops of dynamic range above Zone 0.
     # We adjust this based on the dev_offset (e.g. -2 for N-2, +2 for N+2).
     # 1 stop = log10(2) ≈ 0.30103 LogE units.
-    dynamic_range_stops = 7.0 + dev_offset
+    dynamic_range = (xp.max() - xp_start) / np.log10(2.0)
+    dynamic_range_stops = dynamic_range + dev_offset
     log_e_stops = dynamic_range_stops * np.log10(2.0)
     
     xp_end = xp_start + log_e_stops

@@ -1,29 +1,27 @@
-from .nodes import PrintLabGraded, PrintLabMultigrade, SpectralLab, FilterLab, FilmLab, GrayscaleLab, CameraLab, ShaderLab, CropFilmAspectRatio, FilmAspectRatio
+from .nodes import PrintLabGraded, PrintLabMultigrade, DeveloperLab, FilterLab, GrayscaleLab, CameraLab, FilmGrainLab, CropFilmAspectRatio, FilmAspectRatio
 
 NODE_CLASS_MAPPINGS = {
-    "SpectralLab": SpectralLab,
+    "DeveloperLab": DeveloperLab,
     "FilterLab": FilterLab,
     "PrintLabMultigrade": PrintLabMultigrade,
     "PrintLabGraded": PrintLabGraded,
-    "FilmLab": FilmLab,
     "GrayscaleLab": GrayscaleLab,
     "CameraLab": CameraLab,
-    "ShaderLab": ShaderLab,
+    "FilmGrainLab": FilmGrainLab,
     "CropFilmAspectRatio": CropFilmAspectRatio,
     "FilmAspectRatio": FilmAspectRatio,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "SpectralLab": "JB Film Development",
-    "FilterLab": "JB Wratten Filter",
-    "PrintLabMultigrade": "JB Darkroom Enlarger (Multigrade)",
-    "PrintLabGraded": "JB Darkroom Enlarger",
-    "FilmLab": "JB Film Stock",
-    "GrayscaleLab": "JB Grayscale Image",
-    "CameraLab": "JB Camera",
-    "ShaderLab": "JB Film Grain",
-    "CropFilmAspectRatio": "JB Crop Film Aspect Ratio",
-    "FilmAspectRatio": "JB Film Aspect Ratio",
+    "DeveloperLab": "Film Development",
+    "FilterLab": "Wratten Filter",
+    "PrintLabMultigrade": "Darkroom Enlarger (Multigrade)",
+    "PrintLabGraded": "Darkroom Enlarger",
+    "GrayscaleLab": "Grayscale Image",
+    "CameraLab": "B&W Film Camera",
+    "FilmGrainLab": "Film Grain",
+    "CropFilmAspectRatio": "Crop Film Aspect Ratio",
+    "FilmAspectRatio": "Film Aspect Ratio",
 }
 
 WEB_DIRECTORY = "./web"

@@ -1,20 +1,40 @@
 {
     "sources": [
         {
-            "label": "Incandescent, Tungsten (2856 K)",
+            "label": "Tungsten (2856 K)",
             "key": "A"
         },
         {
-            "label": "Noon Daylight (6500 K)",
-            "key": "D65"
+            "label": "Cool White (5000 K)",
+            "key": "D50"
         },
         {
-            "label": "Mid-day Daylight, Flash (5500 K)",
+            "label": "Flash (5500 K)",
             "key": "D55"
         },
         {
-            "label": "Horizon Light (5000 K)",
-            "key": "D50"
+            "label": "Overcast Sky (6000 K)",
+            "key": "D60"
+        },
+        {
+            "label": "Daylight (6500 K)",
+            "key": "D65"
+        },
+        {
+            "label": "Shade (7500 K)",
+            "key": "D75"
+        },
+        {
+            "label": "ISO 7589 / Photographic Daylight",
+            "key": "ISO 7589 Photographic Daylight"
+        },
+        {
+            "label": "ISO 7589 / Studio Tungsten",
+            "key": "ISO 7589 Studio Tungsten"
+        },
+        {
+            "label": "ISO 7589 / Photoflood",
+            "key": "ISO 7589 Photoflood"
         }
     ]
 }

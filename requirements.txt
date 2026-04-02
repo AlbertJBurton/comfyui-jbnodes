@@ -1,9 +1,5 @@
 numpy
 torch
-os
-json
 colour-science
-opencv-python
-pilgram
 moderngl
-
+Pillow
