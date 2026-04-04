@@ -1,4 +1,55 @@
-from .nodes import PrintLabGraded, PrintLabMultigrade, DeveloperLab, FilterLab, GrayscaleLab, CameraLab, FilmGrainLab, CropFilmAspectRatio, FilmAspectRatio
+'''
+    ComfyUI Nodes for Film Simulation and Photographic Principles
+    -------------------------------------------------------------
+    Copyright (C) 2026  Albert J. Burton
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+'''
+
+__version__ = "0.2.0"
+
+print("\n\033[32m[comfyui-jbnodes]\033[0m Loading ComfyUI Nodes for B&W Film Emulation (version {})".format(__version__))
+
+''' --- UTILITY NODES --- '''
+try:
+    from .nodes.film_aspect_ratio import FilmAspectRatio
+    from .nodes.crop_film_aspect_ratio import CropFilmAspectRatio
+    from .nodes.grayscale_lab import GrayscaleLab
+except ImportError as e:
+    print("\033[31m[comfyui-jbnodes]\033[0m Warning: Failed to import utility nodes. Some functionality may be limited. Error details: {}".format(e))
+finally:
+    print("\033[32m[comfyui-jbnodes]\033[0m Utility nodes loaded.")
+
+''' --- PHOTOGRAPHY NODES --- '''
+try:
+    from .nodes.camera_lab import CameraLab
+    from .nodes.filter_lab import FilterLab
+    from .nodes.film_grain_lab import FilmGrainLab
+    from .nodes.developer_lab import DeveloperLab
+except ImportError as e:
+    print("\033[31m[comfyui-jbnodes]\033[0m Warning: Failed to import photography nodes. Some functionality may be limited. Error details: {}".format(e))
+finally:
+    print("\033[32m[comfyui-jbnodes]\033[0m Photography nodes loaded.")
+
+''' --- DARKROOM NODES --- '''
+try:
+    from .nodes.print_lab_multigrade import PrintLabMultigrade
+    from .nodes.print_lab_graded import PrintLabGraded
+except ImportError as e:
+    print("\033[31m[comfyui-jbnodes]\033[0m Warning: Failed to import darkroom nodes. Some functionality may be limited. Error details: {}".format(e))
+finally:
+    print("\033[32m[comfyui-jbnodes]\033[0m Darkroom nodes loaded.")
 
 NODE_CLASS_MAPPINGS = {
     "DeveloperLab": DeveloperLab,
@@ -26,6 +77,5 @@ NODE_DISPLAY_NAME_MAPPINGS = {
 
 WEB_DIRECTORY = "./web"
 
-__version__ = "0.1.1"
-__all__ = ["NODE_CLASS_MAPPINGS", "NODE_DISPLAY_NAME_MAPPINGS", "WEB_DIRECTORY"]
+__all__ = ["NODE_CLASS_MAPPINGS", "NODE_DISPLAY_NAME_MAPPINGS", "WEB_DIRECTORY", __version__]
 

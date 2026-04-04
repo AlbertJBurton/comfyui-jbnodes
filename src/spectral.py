@@ -4,8 +4,8 @@ import colour
 
 from colour.recovery import RGB_to_sd_Smits1999
 
-from .util import linear_to_srgb_torch, srgb_to_linear_torch, pchip_interpolate_numpy
-from .classes import FilmFormat, HDCurve, FilmStock
+from .srgb import srgb_to_linear_torch, linear_to_srgb_torch
+from .interpolate import pchip_interpolate_numpy
 
 from comfy import model_management
 

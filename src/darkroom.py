@@ -2,8 +2,8 @@ import torch
 
 from comfy import model_management
 
-from .classes import HDCurve, FilmStock, Camera
-from .util import pchip_interpolate_torch, apply_1d_lut
+from .lut import apply_1d_lut
+from .interpolate import pchip_interpolate_torch
 
 def get_print_image(film_negative, contrast_factor=None, exposure_secs=10.0, hd_curve_points=None, d_max=2.1, d_min=0.04, precision=4096):
     """
@@ -26,16 +26,16 @@ def get_print_image(film_negative, contrast_factor=None, exposure_secs=10.0, hd_
     else:
         rgb = film_negative
 
-    # 1. Invert negative
+    # Invert negative
     inverted = 1.0 - rgb
     
-    # 2. Sensitometric Exposure Calculation
+    # Sensitometric Exposure Calculation
     safe_exposure = max(exposure_secs, 0.001) 
     stops_shift = torch.log2(torch.tensor(safe_exposure / 10.0, device=device))
     exposure_offset = -stops_shift * 0.18
     exposed = torch.clamp(inverted + exposure_offset, 0.0, 1.0)
     
-    # 3. Apply Contrast Curve [Normalized 0.0 to 1.0]
+    # Apply Contrast Curve [Normalized 0.0 to 1.0]
     if hd_curve_points is not None:
         # Move raw coordinate points to the GPU
         hd_curve_points = hd_curve_points.to(device)

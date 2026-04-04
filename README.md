@@ -35,9 +35,6 @@ A comprehensive suite of ComfyUI nodes for simulating analog black and white fil
 ### JB Film Development (`DeveloperLab`)
 The core node for developing the virtual film negative. It takes an input image and processes it through the selected film stock, light source, developer, and optional camera/filters to produce a film negative. Supports advanced controls like push/pull processing and N-development.
 
-### JB Film Stock (`FilmLab`)
-Provides a selection of classic black and white film stocks (e.g., Kodak Tri-X, Ilford HP5) and their associated characteristic curves. Outputs the film stock data to be used by the Film Development node.
-
 ### JB Darkroom Enlarger (`PrintLabGraded` / `PrintLabMultigrade`)
 Simulates printing the developed negative onto photographic paper. 
 * **Graded:** Uses standard graded photographic papers.

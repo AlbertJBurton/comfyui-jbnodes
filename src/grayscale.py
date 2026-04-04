@@ -1,15 +1,16 @@
 import torch
+
 from comfy import model_management
 
-from .util import srgb_to_linear_torch, linear_to_srgb_torch
-
-# Processes a batch of ComfyUI image tensors directly on the GPU.
-# 
-# Args:
-#     image (torch.Tensor): Shape (B, H, W, 3/4) float tensor.
-#     weights (list/tuple): [rW, gW, bW] floats.
+from .srgb import srgb_to_linear_torch, linear_to_srgb_torch
 
 def get_grayscale_image(image, weights):
+    '''
+    Processes a batch of ComfyUI image tensors directly on the GPU.
+    Args:
+        image (torch.Tensor): Shape (B, H, W, 3/4) float tensor.
+        weights (list/tuple): [rW, gW, bW] floats.
+    '''
 
     # Retrieve the active ComfyUI computing device
     device = model_management.get_torch_device()
@@ -26,7 +27,7 @@ def get_grayscale_image(image, weights):
         rgb = img_tensor
         alpha = None
 
-    # 1. Linearize input directly on GPU
+    # Linearize input directly on GPU
     rgb_lin = srgb_to_linear_torch(rgb)
     
     # Extract channels
@@ -34,7 +35,7 @@ def get_grayscale_image(image, weights):
     g_lin = rgb_lin[..., 1]
     b_lin = rgb_lin[..., 2]
 
-    # 2. Apply Spectral Weights (Batched Dot Product)
+    # Apply Spectral Weights (Batched Dot Product)
     latent_lin = (r_lin * weights[0]) + (g_lin * weights[1]) + (b_lin * weights[2])
     
     # Weights should combine to be [0..1], but we rescale here for edge cases
@@ -42,11 +43,11 @@ def get_grayscale_image(image, weights):
     if max_val > 1.0:
         latent_lin = latent_lin / max_val
         
-    # 3. Convert Linear grayscale back to sRGB display curve
+    # Convert Linear grayscale back to sRGB display curve
     latent_srgb = linear_to_srgb_torch(latent_lin)
     latent_srgb = torch.clamp(latent_srgb, 0.0, 1.0)
     
-    # 4. Reconstruct Output (Broadcast 1D grayscale to 3D RGB channels)
+    # Reconstruct Output (Broadcast 1D grayscale to 3D RGB channels)
     out_rgb = latent_srgb.unsqueeze(-1).expand(*latent_srgb.shape, 3)
     
     # Reattach Alpha if necessary
