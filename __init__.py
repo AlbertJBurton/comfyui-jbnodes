@@ -17,7 +17,7 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 '''
 
-__version__ = "0.2.0"
+__version__ = "0.2.1"
 
 print("\n\033[32m[comfyui-jbnodes]\033[0m Loading ComfyUI Nodes for B&W Film Emulation (version {})".format(__version__))
 
@@ -26,6 +26,8 @@ try:
     from .nodes.film_aspect_ratio import FilmAspectRatio
     from .nodes.crop_film_aspect_ratio import CropFilmAspectRatio
     from .nodes.grayscale_lab import GrayscaleLab
+    from .nodes.color_chart_Image import ColorChartImageLoader
+    from .nodes.merge_rgb_channels import MergeRGBImageChannel
 except ImportError as e:
     print("\033[31m[comfyui-jbnodes]\033[0m Warning: Failed to import utility nodes. Some functionality may be limited. Error details: {}".format(e))
 finally:
@@ -61,6 +63,8 @@ NODE_CLASS_MAPPINGS = {
     "FilmGrainLab": FilmGrainLab,
     "CropFilmAspectRatio": CropFilmAspectRatio,
     "FilmAspectRatio": FilmAspectRatio,
+    "ColorChartImageLoader": ColorChartImageLoader,
+    "MergeRGBImageChannel": MergeRGBImageChannel,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
@@ -73,6 +77,8 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "FilmGrainLab": "Film Grain",
     "CropFilmAspectRatio": "Crop Film Aspect Ratio",
     "FilmAspectRatio": "Film Aspect Ratio",
+    "ColorChartImageLoader": "Color Test Chart Image",
+    "MergeRGBImageChannel": "Merge RGB Channels",
 }
 
 WEB_DIRECTORY = "./web"

@@ -1,7 +1,7 @@
 [project]
 name = "comfyui-jbnodes"
 description = "ComfyUI nodes for creating images with the look and feel of various film stocks."
-version = "0.2.0"
+version = "0.2.1"
 license = {file = "LICENSE"} 
 # classifiers = [
 #     # For OS-independent nodes (works on all operating systems)

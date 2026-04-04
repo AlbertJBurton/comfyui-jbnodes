@@ -1,3 +1,22 @@
+'''
+    Darkroom Printing Library Functions
+    -----------------------------------
+    Copyright (C) 2026  Albert J. Burton
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+'''
+
 import torch
 
 from comfy import model_management
@@ -58,13 +77,13 @@ def get_print_image(film_negative, contrast_factor=None, exposure_secs=10.0, hd_
         # Apply the high-precision LUT to the image pixels
         norm_tensor = 1.0 - apply_1d_lut(exposed, norm_density_lut)
         
-        # 4. Map to Physical Paper Density
+        # Map to Physical Paper Density
         density = d_max - norm_tensor * (d_max - d_min)
         
-        # 5. Convert Density to Linear Reflectance
+        # Convert Density to Linear Reflectance
         linear_reflectance = 10.0 ** (-density)
 
-        # 6. Encode to sRGB for proper display in ComfyUI
+        # Encode to sRGB for proper display in ComfyUI
         safe_reflectance = torch.clamp(linear_reflectance, 0.0, 1.0)
         mask = safe_reflectance <= 0.0031308
         srgb_tensor = torch.where(

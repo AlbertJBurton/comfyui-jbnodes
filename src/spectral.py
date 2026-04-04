@@ -1,3 +1,22 @@
+'''
+    Spectral Image Library Functions
+    --------------------------------
+    Copyright (C) 2026  Albert J. Burton
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+'''
+
 import torch
 import numpy as np
 import colour
@@ -9,17 +28,22 @@ from .interpolate import pchip_interpolate_numpy
 
 from comfy import model_management
 
-# Processes a batch of ComfyUI image tensors natively in PyTorch.
-# Utilizes Smits 1999 spectral integration when raw coordinate data is available.
-#
-# Args:
-#     image (torch.Tensor): Shape (B, H, W, 3/4) tensor.
-#     weights (list/tuple): Fallback [rW, gW, bW] floats.
-#     spectral_points (list): Nested list of [Wavelength, Sensitivity] pairs.
-#     illuminant_name (str): Key of the illuminating light source.
-#     char_lut (np.ndarray): 1D uint8 array representing the characteristic curve.
-
 def get_spectral_image(image, weights, spectral_points, illuminant_name, char_lut, output_sRGB=True):
+    '''
+    Processes a batch of ComfyUI image tensors natively in PyTorch.
+    Utilizes Smits 1999 spectral integration when raw coordinate data is available.
+    Args:
+        image (torch.Tensor): Shape (B, H, W, 3/4) tensor.
+        weights (list/tuple): Fallback [rW, gW, bW] floats.
+        spectral_points (list): Nested list of [Wavelength, Sensitivity] pairs.
+        illuminant_name (str): Key of the illuminating light source.
+        char_lut (np.ndarray): 1D uint8 array representing the characteristic curve.
+        output_sRGB (bool): Whether to convert the final output to sRGB color space.
+    Returns:        
+        Tuple of (final_image, preview_image) where:
+        - final_image is the processed image after spectral mapping and LUT application.
+        - preview_image is a sRGB version of the final image for quick visualization in ComfyUI.
+    '''
 
     device = model_management.get_torch_device()
     img_tensor = image.to(device)
@@ -159,10 +183,19 @@ def get_spectral_image(image, weights, spectral_points, illuminant_name, char_lu
     return (stacked_output.cpu(), stacked_inverted.cpu())
 
 
-# Applies the spectral power distribution mapping to generate a linear latent image,
-# bypassing the characteristic curve application and returning only the single processed image.
 
 def get_camera_image(image, camera):
+    '''
+    Applies the spectral power distribution mapping to generate a linear latent image,
+    bypassing the characteristic curve application and returning only the single processed image.
+    Args:
+        image (torch.Tensor): Shape (B, H, W, 3/4) tensor.
+        camera (Camera): Camera object containing film stock and illuminant information.
+        Returns:
+        Tuple of (final_image, preview_image) where:
+        - final_image is the processed image after spectral mapping (without LUT).
+        - preview_image is a sRGB version of the final image for quick visualization in ComfyUI.
+    '''
 
     out_rgb, _ = get_spectral_image(image, camera.film_stock.weights, camera.film_stock.spectral_points, camera.illuminant_key, None, False)
     preview_rgb = linear_to_srgb_torch(out_rgb)
