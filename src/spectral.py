@@ -17,6 +17,7 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 '''
 
+import logging
 import torch
 import numpy as np
 import colour
@@ -183,7 +184,6 @@ def get_spectral_image(image, weights, spectral_points, illuminant_name, char_lu
     return (stacked_output.cpu(), stacked_inverted.cpu())
 
 
-
 def get_camera_image(image, camera):
     '''
     Applies the spectral power distribution mapping to generate a linear latent image,
@@ -196,6 +196,11 @@ def get_camera_image(image, camera):
         - final_image is the processed image after spectral mapping (without LUT).
         - preview_image is a sRGB version of the final image for quick visualization in ComfyUI.
     '''
+
+    if camera.film_stock and camera.film_stock.spectral_points:
+        logging.info(f"[comfyui-jbnodes] using spectral data for {camera.film_stock.name}.")
+    else:
+        logging.info(f"[comfyui-jbnodes] no spectral data found for {camera.film_stock.name}. Using fallback RGB weights.")
 
     out_rgb, _ = get_spectral_image(image, camera.film_stock.weights, camera.film_stock.spectral_points, camera.illuminant_key, None, False)
     preview_rgb = linear_to_srgb_torch(out_rgb)

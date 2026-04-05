@@ -18,7 +18,7 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 '''
 
-from ..node_config import FILM_SIZE_NAMES, FILM_SIZE_MAP
+from ..node_config import FILM_FORMAT_NAMES, FILM_FORMAT_MAP
 
 class CropFilmAspectRatio:
     @classmethod
@@ -26,7 +26,7 @@ class CropFilmAspectRatio:
         return {
             "required": { 
                 "image": ("IMAGE",),
-                "film_size": (FILM_SIZE_NAMES, {}),
+                "film_size": (FILM_FORMAT_NAMES, {}),
                 "orientation": (["Auto", "Landscape", "Portrait"], {}),
                 "shift": ("FLOAT", {"default": 0.00, "min": -1.00, "max": 1.00, "step": 0.01}),
             },
@@ -40,7 +40,7 @@ class CropFilmAspectRatio:
 
     def enforce_aspect_ratio(self, image, film_size, orientation, shift):
 
-        size_data = FILM_SIZE_MAP.get(film_size)
+        size_data = FILM_FORMAT_MAP.get(film_size)
         if not size_data:
             return (image,) # Safety fallback
             

@@ -32,7 +32,7 @@ async function updateDeveloperLabDeveloperWidget(spectralNode, stockName) {
     }
 
     try {
-        const response = await api.fetchApi(`/jbnodes/get_hd_curves?stock_name=${encodeURIComponent(stockName)}`);
+        const response = await api.fetchApi(`/jbnodes/hd_curves?stock_name=${encodeURIComponent(stockName)}`);
         const curves = await response.json();
         
         developerWidget.options.values = curves;
@@ -41,7 +41,7 @@ async function updateDeveloperLabDeveloperWidget(spectralNode, stockName) {
         }
         app.graph.setDirtyCanvas(true, true);
     } catch (err) {
-        console.error("[JBNodes] Error fetching HD curves:", err);
+        console.error("[comfyui-jbnodes] Error fetching HD curves:", err);
     }
 }
 

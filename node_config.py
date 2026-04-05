@@ -58,7 +58,7 @@ with open(GRAYSCALE_JSON_PATH, 'r') as grayscale:
     GRAYSCALE_DATA = json.load(grayscale)
 
 # H&D Curves API route
-@PromptServer.instance.routes.get("/jbnodes/get_hd_curves")
+@PromptServer.instance.routes.get("/jbnodes/hd_curves")
 async def get_hd_curves(request):
     """Returns a list of HD curve names for a given film stock name."""
     stock_name = request.rel_url.query.get("stock_name", "")
@@ -75,6 +75,22 @@ async def get_hd_curves(request):
                 
     return web.json_response(curves)
 
+# Film Format Latent Image Size API route
+@PromptServer.instance.routes.get("/jbnodes/latent_sizes")
+async def get_latent_sizes(request):
+    """Returns a list of latent sizes for a given film format by name."""
+    film_format_name = request.rel_url.query.get("film_format", "")
+    sizes = [] # default
+
+    for format in STOCK_DATA.get("film_formats", []):
+        if format.get("name") == film_format_name:
+            sizes = format.get("latent_sizes", [])
+            if sizes:
+                sizes = [f"{ls['name']}" for ls in sizes]
+            break
+
+    return web.json_response(sizes)
+
 # Create mappings
 STOCK_MAP = {}
 STOCK_NAMES = []
@@ -83,11 +99,11 @@ for group in STOCK_DATA["film_stock_groups"]:
         STOCK_MAP[stock["name"]] = stock
         STOCK_NAMES.append(stock["name"])
 
-FILM_SIZE_MAP = {}
-FILM_SIZE_NAMES = []
+FILM_FORMAT_MAP = {}
+FILM_FORMAT_NAMES = []
 for film_size in STOCK_DATA["film_formats"]:
-        FILM_SIZE_MAP[film_size["name"]] = film_size
-        FILM_SIZE_NAMES.append(film_size["name"])
+        FILM_FORMAT_MAP[film_size["name"]] = film_size
+        FILM_FORMAT_NAMES.append(film_size["name"])
 
 GRAYSCALE_MAP = {}
 GRAYSCALE_NAMES = []
@@ -108,7 +124,7 @@ BW_FILTER_NAMES = []
 BW_FILTER_MAP["None"] = None
 BW_FILTER_NAMES.append("None")
 for filter in FILTER_DATA["filters"]:
-    if filter.get("id") in [8, 11, 15, 25, 29, 47]: 
+    if filter.get("id") in [8, 11, 15, 25, 38, 66]: 
         name = filter["name"].split("/")[-1].strip()
         BW_FILTER_MAP[name] = filter
         BW_FILTER_NAMES.append(name)

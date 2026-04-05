@@ -17,7 +17,7 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 '''
 
-from ..node_config import CAMERA_NAMES, CAMERA_MAP, BW_FILTER_NAMES, BW_FILTER_MAP, STOCK_NAMES, STOCK_MAP, FILM_SIZE_NAMES, SOURCE_NAMES, SOURCE_MAP
+from ..node_config import CAMERA_NAMES, CAMERA_MAP, BW_FILTER_NAMES, BW_FILTER_MAP, STOCK_NAMES, STOCK_MAP, FILM_FORMAT_NAMES, SOURCE_NAMES, SOURCE_MAP
 
 from ..src.spectral import get_camera_image
 from ..src.filters import get_filter_image
@@ -34,7 +34,7 @@ class CameraLab:
                 "camera": (CAMERA_NAMES, {}),
                 "filter": (BW_FILTER_NAMES, {"default": "None"}),
                 "film": (STOCK_NAMES, {}),
-                "film_size": (FILM_SIZE_NAMES, {}),
+                "film_size": (FILM_FORMAT_NAMES, {}),
             },
             "optional": {
                 "light_source": (SOURCE_NAMES, {"default": "Noon Daylight (6500 K)"}),
@@ -53,8 +53,8 @@ class CameraLab:
         film_obj = FilmStock.from_dict(STOCK_MAP.get(film))
         camera_obj.film_stock = film_obj
 
-        source_data = SOURCE_MAP.get(light_source)
-        camera_obj.illuminant_key = source_data["key"] if source_data else "D65"
+        illuminant = SOURCE_MAP.get(light_source)
+        camera_obj.illuminant_key = illuminant["key"] if illuminant else "D65"
 
         film_width = 36.0 if film_size == "135" else (70.0 if film_size == "120" else (120.0 if film_size == "4x5" else 240.0))
         camera_obj.film_width = film_width

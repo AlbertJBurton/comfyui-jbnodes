@@ -41,7 +41,9 @@ class PrintLabMultigrade:
     DESCRIPTION = """Simulate printing a negative to photographic paper."""
 
     def print_image(self, film_negative, contrast_filter, exposure_secs):
+
         filter_data = CONTRAST_MAP.get(contrast_filter)
         contrast_factor = filter_data.get("factor")
+
         return get_print_image(film_negative, contrast_factor = contrast_factor, exposure_secs = exposure_secs)
 

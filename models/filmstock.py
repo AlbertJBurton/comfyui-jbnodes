@@ -27,13 +27,10 @@ class FilmStock:
     id: str
     name: str
     description: str
-    # Provide safe defaults
+    iso: int = 100
     weights: List[float] = field(default_factory = lambda: [0.33, 0.33, 0.33])
-    luminosity_mask: List[float] = field(default_factory = lambda: [2.8, 1.1, 10.18, 0.0])
     params: Dict[str, float] = field(default_factory = lambda: {"slope": 1.8, "toe": 0.2, "shoulder": 0.8})
-    # spectral_points is optional since some stocks in don't have it defined
     spectral_points: Optional[List[List[float]]] = None 
-    # hd_curves contains H&D plot data for specific developers, times, and temps
     hd_curves: Optional[List[HDCurve]] = None
 
     @classmethod
@@ -47,8 +44,8 @@ class FilmStock:
             id = data.get("id", "generic"),
             name = data.get("name", "Generic Film Stock"),
             description = data.get("description", ""),
+            iso = int(data.get("iso", 100)),
             weights = data.get("weights", [0.33, 0.33, 0.33]),
-            luminosity_mask = data.get("luminosity_mask", [2.8, 1.1, 10.18, 0.0]),
             params = data.get("params", {"slope": 1.8, "toe": 0.2, "shoulder": 0.8}),
             spectral_points = data.get("spectral_points"),
             hd_curves = parsed_hd_curves

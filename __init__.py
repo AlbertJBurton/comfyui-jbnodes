@@ -17,7 +17,7 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 '''
 
-__version__ = "0.2.1"
+__version__ = "0.2.2"
 
 print("\n\033[32m[comfyui-jbnodes]\033[0m Loading ComfyUI Nodes for B&W Film Emulation (version {})".format(__version__))
 
@@ -48,6 +48,7 @@ finally:
 try:
     from .nodes.print_lab_multigrade import PrintLabMultigrade
     from .nodes.print_lab_graded import PrintLabGraded
+    from .nodes.print_lab_splitgrade import PrintLabSplitGrade
 except ImportError as e:
     print("\033[31m[comfyui-jbnodes]\033[0m Warning: Failed to import darkroom nodes. Some functionality may be limited. Error details: {}".format(e))
 finally:
@@ -65,13 +66,12 @@ NODE_CLASS_MAPPINGS = {
     "FilmAspectRatio": FilmAspectRatio,
     "ColorChartImageLoader": ColorChartImageLoader,
     "MergeRGBImageChannel": MergeRGBImageChannel,
+    "PrintLabSplitGrade": PrintLabSplitGrade,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
     "DeveloperLab": "Film Development",
     "FilterLab": "Wratten Filter",
-    "PrintLabMultigrade": "Darkroom Enlarger (Multigrade)",
-    "PrintLabGraded": "Darkroom Enlarger",
     "GrayscaleLab": "Grayscale Image",
     "CameraLab": "B&W Film Camera",
     "FilmGrainLab": "Film Grain",
@@ -79,6 +79,9 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "FilmAspectRatio": "Film Aspect Ratio",
     "ColorChartImageLoader": "Color Test Chart Image",
     "MergeRGBImageChannel": "Merge RGB Channels",
+    "PrintLabSplitGrade": "Darkroom Enlarger (Split Grade)",
+    "PrintLabMultigrade": "Darkroom Enlarger (Multigrade)",
+    "PrintLabGraded": "Darkroom Enlarger",
 }
 
 WEB_DIRECTORY = "./web"

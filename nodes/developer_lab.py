@@ -91,7 +91,7 @@ class DeveloperLab:
         else:
             char_lut = get_hd_curve_lut(curve, precision, ei=exposure_index, dev_offset=N_development)
             try:
-                logging.info(f"[comfyui-jbnodes] applying {stock_name} - {curve.name} characteristic curve with EI: {exposure_index}, Dev Offset: {N_development}")
+                logging.info(f"[comfyui-jbnodes] applying {stock_name} - {curve.name} characteristic curve with EI: {exposure_index}, N-development: {N_development}")
             except:
                 pass
 
