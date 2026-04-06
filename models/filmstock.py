@@ -17,6 +17,8 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 '''
 
+from ..node_config import FILM_FORMAT_NAMES, FILM_FORMAT_MAP
+
 from dataclasses import dataclass, field
 from typing import List, Dict, Optional
 
@@ -30,6 +32,7 @@ class FilmStock:
     iso: int = 100
     weights: List[float] = field(default_factory = lambda: [0.33, 0.33, 0.33])
     params: Dict[str, float] = field(default_factory = lambda: {"slope": 1.8, "toe": 0.2, "shoulder": 0.8})
+    film_formats: Optional[List[str]] = None
     spectral_points: Optional[List[List[float]]] = None 
     hd_curves: Optional[List[HDCurve]] = None
 
@@ -45,9 +48,10 @@ class FilmStock:
             name = data.get("name", "Generic Film Stock"),
             description = data.get("description", ""),
             iso = int(data.get("iso", 100)),
+            film_formats = data.get("film_formats", FILM_FORMAT_NAMES),  # Default to all formats if not specified
             weights = data.get("weights", [0.33, 0.33, 0.33]),
             params = data.get("params", {"slope": 1.8, "toe": 0.2, "shoulder": 0.8}),
-            spectral_points = data.get("spectral_points"),
+            spectral_points = data.get("spectral_points", None),
             hd_curves = parsed_hd_curves
         )
 

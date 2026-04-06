@@ -17,7 +17,7 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 '''
 
-__version__ = "0.2.2"
+__version__ = "0.2.3"
 
 print("\n\033[32m[comfyui-jbnodes]\033[0m Loading ComfyUI Nodes for B&W Film Emulation (version {})".format(__version__))
 

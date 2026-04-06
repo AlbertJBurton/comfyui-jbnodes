@@ -18,7 +18,7 @@
 import { app } from "../../../scripts/app.js";
 import { api } from "../../../scripts/api.js";
 
-async function updateDeveloperLabDeveloperWidget(spectralNode, stockName) {
+async function updateDeveloperLabDeveloperWidget(spectralNode, stockName, savedDeveloper = null) {
     const developerWidget = spectralNode.widgets?.find((w) => w.name === "developer");
     if (!developerWidget) return;
 
@@ -36,13 +36,53 @@ async function updateDeveloperLabDeveloperWidget(spectralNode, stockName) {
         const curves = await response.json();
         
         developerWidget.options.values = curves;
-        if (!curves.includes(developerWidget.value)) {
-            developerWidget.value = curves[0];
+        
+        let targetDeveloper = savedDeveloper || developerWidget.value;
+        if (!curves.includes(targetDeveloper)) {
+            targetDeveloper = curves[0];
         }
+        developerWidget.value = targetDeveloper;
+        
         app.graph.setDirtyCanvas(true, true);
     } catch (err) {
         console.error("[comfyui-jbnodes] Error fetching HD curves:", err);
     }
+}
+
+function getFilmFromLink(linkId, app) {
+    let currentLinkId = linkId;
+    let visited = new Set();
+    
+    while (currentLinkId != null) {
+        if (visited.has(currentLinkId)) return null;
+        visited.add(currentLinkId);
+        
+        const link = app.graph.links[currentLinkId];
+        if (!link) return null;
+        
+        const originNode = app.graph.getNodeById(link.origin_id);
+        if (!originNode) return null;
+        
+        if (originNode.type === "Reroute") {
+            const input = originNode.inputs ? originNode.inputs[0] : null;
+            if (input && input.link != null) {
+                currentLinkId = input.link;
+                continue;
+            } else {
+                return null;
+            }
+        }
+        
+        if (originNode.comfyClass === "CameraLab") {
+            const filmWidget = originNode.widgets?.find(w => w.name === "film");
+            if (filmWidget) {
+                return filmWidget.value;
+            }
+        }
+        
+        return null;
+    }
+    return null;
 }
 
 app.registerExtension({
@@ -68,16 +108,32 @@ app.registerExtension({
                         
                         // Find connected DeveloperLab nodes and update them
                         if (this.outputs) {
+                            const findConnectedDeveloperLabs = (linkIds) => {
+                                let developerLabs = [];
+                                for (const linkId of linkIds) {
+                                    const link = app.graph.links[linkId];
+                                    if (!link) continue;
+                                    
+                                    const targetNode = app.graph.getNodeById(link.target_id);
+                                    if (!targetNode) continue;
+                                    
+                                    if (targetNode.comfyClass === "DeveloperLab") {
+                                        developerLabs.push(targetNode);
+                                    } else if (targetNode.type === "Reroute") {
+                                        const rerouteOutput = targetNode.outputs ? targetNode.outputs[0] : null;
+                                        if (rerouteOutput && rerouteOutput.links) {
+                                            developerLabs = developerLabs.concat(findConnectedDeveloperLabs(rerouteOutput.links));
+                                        }
+                                    }
+                                }
+                                return developerLabs;
+                            };
+
                             for (const out of this.outputs) {
                                 if (out.type === "CAMERA" && out.links) {
-                                    for (const linkId of out.links) {
-                                        const link = app.graph.links[linkId];
-                                        if (link) {
-                                            const targetNode = app.graph.getNodeById(link.target_id);
-                                            if (targetNode && targetNode.comfyClass === "DeveloperLab") {
-                                                updateDeveloperLabDeveloperWidget(targetNode, stockName);
-                                            }
-                                        }
+                                    const developerLabs = findConnectedDeveloperLabs(out.links);
+                                    for (const targetNode of developerLabs) {
+                                        updateDeveloperLabDeveloperWidget(targetNode, stockName);
                                     }
                                 }
                             }
@@ -99,12 +155,9 @@ app.registerExtension({
                     const input = this.inputs[slotIndex];
                     if (input.name === "camera") {
                         if (isConnected) {
-                            const sourceNode = app.graph.getNodeById(link_info.origin_id);
-                            if (sourceNode && sourceNode.comfyClass === "CameraLab") {
-                                const filmWidget = sourceNode.widgets?.find((w) => w.name === "film");
-                                if (filmWidget) {
-                                    updateDeveloperLabDeveloperWidget(this, filmWidget.value);
-                                }
+                            const stockName = getFilmFromLink(input.link, app);
+                            if (stockName) {
+                                updateDeveloperLabDeveloperWidget(this, stockName);
                             }
                         } else {
                             // Disconnected
@@ -118,24 +171,27 @@ app.registerExtension({
             
             const onConfigure = nodeType.prototype.onConfigure;
             nodeType.prototype.onConfigure = function (info) {
+                let savedDeveloper = null;
+                
+                if (info && info.widgets_values) {
+                    const developerIndex = this.widgets?.findIndex(w => w.name === "developer");
+                    if (developerIndex !== -1 && developerIndex < info.widgets_values.length) {
+                        savedDeveloper = info.widgets_values[developerIndex];
+                    }
+                }
+
                 const r = onConfigure ? onConfigure.apply(this, arguments) : undefined;
                 
                 // Wait for graph to be fully populated
                 setTimeout(() => {
                     const cameraInput = this.inputs?.find(i => i.name === "camera");
                     if (cameraInput && cameraInput.link) {
-                        const link = app.graph.links[cameraInput.link];
-                        if (link) {
-                            const sourceNode = app.graph.getNodeById(link.origin_id);
-                            if (sourceNode && sourceNode.comfyClass === "CameraLab") {
-                                const filmWidget = sourceNode.widgets?.find((w) => w.name === "film");
-                                if (filmWidget) {
-                                    updateDeveloperLabDeveloperWidget(this, filmWidget.value);
-                                }
-                            }
+                        const stockName = getFilmFromLink(cameraInput.link, app);
+                        if (stockName) {
+                            updateDeveloperLabDeveloperWidget(this, stockName, savedDeveloper);
                         }
                     }
-                }, 100);
+                }, 0);
                 
                 return r;
             };

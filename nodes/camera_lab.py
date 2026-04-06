@@ -17,12 +17,13 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 '''
 
-from ..node_config import CAMERA_NAMES, CAMERA_MAP, BW_FILTER_NAMES, BW_FILTER_MAP, STOCK_NAMES, STOCK_MAP, FILM_FORMAT_NAMES, SOURCE_NAMES, SOURCE_MAP
+from ..node_config import CAMERA_NAMES, CAMERA_MAP, BW_FILTER_NAMES, BW_FILTER_MAP, STOCK_NAMES, STOCK_MAP, FILM_FORMAT_MAP, SOURCE_NAMES, SOURCE_MAP
 
 from ..src.spectral import get_camera_image
 from ..src.filters import get_filter_image
 
 from ..models.filmstock import FilmStock
+from ..models.filmformat import FilmFormat
 from ..models.camera import Camera
 
 class CameraLab:
@@ -31,15 +32,20 @@ class CameraLab:
         return {
             "required": { 
                 "image": ("IMAGE",),
-                "camera": (CAMERA_NAMES, {}),
+                "film_format": ("FILMFORMAT",),
+                "camera": ([None],),
                 "filter": (BW_FILTER_NAMES, {"default": "None"}),
-                "film": (STOCK_NAMES, {}),
-                "film_size": (FILM_FORMAT_NAMES, {}),
+                "film": ([None],),
             },
             "optional": {
-                "light_source": (SOURCE_NAMES, {"default": "Noon Daylight (6500 K)"}),
+                "light_source": (SOURCE_NAMES, ),
             }
         }
+
+    # Bypass ComfyUI's strict dropdown validation for dynamic widgets
+    @classmethod
+    def VALIDATE_INPUTS(s, camera, film):
+        return True
 
     RETURN_TYPES = ("CAMERA", "IMAGE")
     RETURN_NAMES = ("camera", "preview")
@@ -47,17 +53,16 @@ class CameraLab:
     CATEGORY = "JBNodes"
     DESCRIPTION = """Classic black-and-white film cameras."""
 
-    def get_camera(self, image, camera, filter, film, light_source, film_size):
+    def get_camera(self, image, film_format, camera, filter, film, light_source):
         camera_obj = Camera.from_dict(CAMERA_MAP.get(camera))
 
         film_obj = FilmStock.from_dict(STOCK_MAP.get(film))
         camera_obj.film_stock = film_obj
 
+        camera_obj.film_format = film_format if film_format else FilmFormat.from_dict(FILM_FORMAT_MAP.get("135"))  # Default to 35mm if no format provided
+
         illuminant = SOURCE_MAP.get(light_source)
         camera_obj.illuminant_key = illuminant["key"] if illuminant else "D65"
-
-        film_width = 36.0 if film_size == "135" else (70.0 if film_size == "120" else (120.0 if film_size == "4x5" else 240.0))
-        camera_obj.film_width = film_width
 
         if filter != "None":
             filter_data = BW_FILTER_MAP.get(filter)

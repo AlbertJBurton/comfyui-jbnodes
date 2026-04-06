@@ -26,37 +26,37 @@ class CropFilmAspectRatio:
         return {
             "required": { 
                 "image": ("IMAGE",),
-                "film_size": (FILM_FORMAT_NAMES, {}),
+                "film_format": (FILM_FORMAT_NAMES, {}),
                 "orientation": (["Auto", "Landscape", "Portrait"], {}),
                 "shift": ("FLOAT", {"default": 0.00, "min": -1.00, "max": 1.00, "step": 0.01}),
             },
         }
 
-    RETURN_TYPES = ("IMAGE",)
-    RETURN_NAMES = ("image",)
+    RETURN_TYPES = ("IMAGE", "FILMFORMAT")
+    RETURN_NAMES = ("image", "film_format")
     FUNCTION = "enforce_aspect_ratio"
     CATEGORY = "JBNodes/Utility"
     DESCRIPTION = """Crop the image to match the aspect ratio of a specific film format."""
 
-    def enforce_aspect_ratio(self, image, film_size, orientation, shift):
+    def enforce_aspect_ratio(self, image, film_format, orientation, shift):
 
-        size_data = FILM_FORMAT_MAP.get(film_size)
-        if not size_data:
-            return (image,) # Safety fallback
+        film_format_obj = FILM_FORMAT_MAP.get(film_format)
+        if not film_format_obj:
+            return (image, None) # Safety fallback
             
         _, height, width, _ = image.shape
         current_aspect = width / height
 
         if orientation == "Auto":
             if width > height:
-                target_aspect = size_data["frame_size"][0] / size_data["frame_size"][1]
+                target_aspect = film_format_obj["frame_size"][0] / film_format_obj["frame_size"][1]
             else:            
-                target_aspect = size_data["frame_size"][1] / size_data["frame_size"][0]
+                target_aspect = film_format_obj["frame_size"][1] / film_format_obj["frame_size"][0]
         else:
             if orientation == "Landscape":
-                target_aspect = size_data["frame_size"][0] / size_data["frame_size"][1]
+                target_aspect = film_format_obj["frame_size"][0] / film_format_obj["frame_size"][1]
             else:
-                target_aspect = size_data["frame_size"][1] / size_data["frame_size"][0]
+                target_aspect = film_format_obj["frame_size"][1] / film_format_obj["frame_size"][0]
 
         # Use a small tolerance for floating point comparisons to prevent microscopic 1-pixel jitters
         if abs(current_aspect - target_aspect) < 0.001:
@@ -72,17 +72,17 @@ class CropFilmAspectRatio:
             new_width = width
             new_height = int(round(width / target_aspect))
 
-        x_offset = 0 
-        y_offset = 0
-        shift_offset = 0
-        
-        x_offset = (width - new_width) // 2
-        y_offset = (height - new_height) // 2        
-        shift_offset = int(((height - new_height) // 2) * (-shift))
+        # Apply user adjustment for shift in cropping position. Default is 1.0 (no change). 
+        # Positive values shift the crop towards the right (for landscape) or down
+        # (for portrait), while negative values shift it left/up.
+        x_offset = int((width - new_width) // 2)
+        y_offset = int((height - new_height) // 2)
 
-        # Apply user adjustment for shift in cropping position. Default is 1.0 (no change). Max 2.0 (double the shift).
-        y_offset += shift_offset
+        if current_aspect > target_aspect:
+            x_offset += int(x_offset * (-shift))
+        else:
+            y_offset += int(y_offset * (-shift))
 
         image = image[:, y_offset:y_offset + new_height, x_offset:x_offset + new_width, :]
 
-        return (image,)
+        return (image, film_format_obj)

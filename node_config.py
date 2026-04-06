@@ -75,7 +75,7 @@ async def get_hd_curves(request):
                 
     return web.json_response(curves)
 
-# Film Format Latent Image Size API route
+# Film Format -> Latent Image Size API route
 @PromptServer.instance.routes.get("/jbnodes/latent_sizes")
 async def get_latent_sizes(request):
     """Returns a list of latent sizes for a given film format by name."""
@@ -90,6 +90,34 @@ async def get_latent_sizes(request):
             break
 
     return web.json_response(sizes)
+
+# Film Formats -> Cameras API route
+@PromptServer.instance.routes.get("/jbnodes/cameras")
+async def get_cameras(request):
+    """Returns a list of cameras for a given film format by name."""
+    film_format_name = request.rel_url.query.get("film_format", "")
+    cameras = []
+
+    for camera in CAMERA_DATA.get("cameras", []):
+        if camera.get("film_format") == film_format_name: 
+            cameras.append(camera.get("name"))
+
+    return web.json_response(cameras)
+
+# Film Formats -> Film API route
+@PromptServer.instance.routes.get("/jbnodes/film_stocks")
+async def get_film_stocks(request):
+    """Returns a list of film stocks for a given film format by name."""
+    film_format_name = request.rel_url.query.get("film_format", "")
+    films = []
+
+    for group in STOCK_DATA.get("film_stock_groups", []):
+        for stock in group.get("stocks", []):
+            formats = stock.get("film_formats", [])
+            if film_format_name in formats:
+                films.append(stock.get("name"))
+
+    return web.json_response(films)
 
 # Create mappings
 STOCK_MAP = {}

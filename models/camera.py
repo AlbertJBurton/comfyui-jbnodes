@@ -23,11 +23,13 @@ from dataclasses import dataclass
 from typing import Optional
 
 from .filmstock import FilmStock
+from .filmformat import FilmFormat
 
 @dataclass
 class Camera:
     name: str
     illuminant_key: str
+    film_format: Optional[FilmFormat] = None
     film_stock: Optional[FilmStock] = None
     image: Optional[torch.Tensor] = None
 
@@ -35,9 +37,10 @@ class Camera:
     def from_dict(cls, data: dict):
 
         return cls(
-            name = data.get("name", "Unknown Camera"),
+            name = data.get("name", "Generic Camera"),
             illuminant_key = data.get("illuminant_key", "D65"),
-            film_stock = None,  # To be set later when we have the FilmStock object
-            image = None        # To be set later when we load the image tensor
+            film_format = None, 
+            film_stock = None,  
+            image = None        
         )
 

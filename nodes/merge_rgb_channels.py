@@ -26,7 +26,7 @@ class MergeRGBImageChannel:
             "red": ("IMAGE",),
             "green": ("IMAGE",),
             "blue": ("IMAGE",),
-    },
+            },
             "optional": {
                 "normalize": ("BOOLEAN", {"default": False}),
                 },

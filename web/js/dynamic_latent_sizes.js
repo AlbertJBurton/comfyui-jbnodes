@@ -78,14 +78,14 @@ app.registerExtension({
             };
 
             // Add onConfigure to handle workflow loading
-            // Without this, loading a saved workflow won't trigger the UI to fetch the custom curves
+            // Without this, loading a saved workflow won't trigger the UI to fetch the film formats
             const onConfigure = nodeType.prototype.onConfigure;
             nodeType.prototype.onConfigure = function (info) {
                 const r = onConfigure ? onConfigure.apply(this, arguments) : undefined;
                 
-                const stockWidget = this.widgets?.find((w) => w.name === "film_stock");
-                if (stockWidget && stockWidget.callback) {
-                    stockWidget.callback.call(stockWidget, stockWidget.value);
+                const formatWidget = this.widgets?.find((w) => w.name === "film_format");
+                if (formatWidget && formatWidget.callback) {
+                    formatWidget.callback.call(formatWidget, formatWidget.value);
                 }
                 
                 return r;

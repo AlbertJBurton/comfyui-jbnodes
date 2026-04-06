@@ -1,7 +1,7 @@
 [project]
 name = "comfyui-jbnodes"
 description = "ComfyUI nodes for creating images with the look and feel of various black-and-white film stocks."
-version = "0.2.2"
+version = "0.2.3"
 license = {file = "LICENSE"} 
 dependencies = ["numpy", "torch", "colour-science", "moderngl", "Pillow"]
 

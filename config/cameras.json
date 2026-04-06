@@ -1,24 +1,53 @@
 {
     "cameras": [
         {
-            "name": "Mamiya RB67",
-            "film_size": "120 (6x7)"
+            "name": "35mm SLR",
+            "film_format": "135",
+            "lens": [
+                "50mm"
+            ]
         },
         {
-            "name": "Canon AE-1",
-            "film_size": "135"
+            "name": "Medium Format 6x4.5 SLR",
+            "film_format": "120 (6x4.5)",
+            "lens": [
+                "80mm"
+            ]
         },
         {
-            "name": "Canon A-1",
-            "film_size": "135"
+            "name": "Medium Format 6x6 SLR",
+            "film_format": "120 (6x6)",
+            "lens": [
+                "80mm"
+            ]
         },
         {
-            "name": "Mamiya 645",
-            "film_size": "120 (6x4.5)"
+            "name": "Medium Format 6x7 SLR",
+            "film_format": "120 (6x7)",
+            "lens": [
+                "80mm"
+            ]
         },
         {
-            "name": "Mamiya C330F",
-            "film_size": "120 (6x6)"
+            "name": "Medium Format 6x9 SLR",
+            "film_format": "120 (6x9)",
+            "lens": [
+                "80mm"
+            ]
+        },
+        {
+            "name": "Large Format 4x5",
+            "film_format": "4x5",
+            "lens": [
+                "150mm"
+            ]
+        },
+        {
+            "name": "Large Format 8x10",
+            "film_format": "8x10",
+            "lens": [
+                "300mm"
+            ]
         }
     ]
 }
