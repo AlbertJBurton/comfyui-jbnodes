@@ -4,13 +4,13 @@ A comprehensive suite of ComfyUI nodes for simulating analog black-and-white fil
 
 > _**NOTE: This project is still a beta project and is in active development. Expect changes to node definitions or functions that may be breaking changes to previous versions.**_
 
-## Requirements
+## Dependencies
 
-* `numpy`
-* `torch`
-* `colour-science`
-* `moderngl`
-* `Pillow`
+* [`numpy`](https://github.com/numpy/numpy)
+* [`torch`](https://github.com/pytorch/pytorch)
+* [`colour-science`](https://github.com/colour-science/colour)
+* [`moderngl`](https://github.com/moderngl/moderngl)
+* [`Pillow`](https://github.com/python-pillow/Pillow)
 
 ## Installation
 
