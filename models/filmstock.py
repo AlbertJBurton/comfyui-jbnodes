@@ -23,6 +23,7 @@ from dataclasses import dataclass, field
 from typing import List, Dict, Optional
 
 from .hdcurve import HDCurve
+from .filmgrain import FilmGrain
 
 @dataclass
 class FilmStock:
@@ -33,6 +34,7 @@ class FilmStock:
     weights: List[float] = field(default_factory = lambda: [0.33, 0.33, 0.33])
     params: Dict[str, float] = field(default_factory = lambda: {"slope": 1.8, "toe": 0.2, "shoulder": 0.8})
     film_formats: Optional[List[str]] = None
+    film_grain: Optional[Dict[str, float]] = None
     spectral_points: Optional[List[List[float]]] = None 
     hd_curves: Optional[List[HDCurve]] = None
 
@@ -42,6 +44,9 @@ class FilmStock:
         # Parse HD curves if they exist in the payload
         raw_hd_curves = data.get("hd_curves")
         parsed_hd_curves = [HDCurve.from_dict(c) for c in raw_hd_curves] if raw_hd_curves else None
+        raw_film_grain = data.get("film_grain")
+        parsed_film_grain = FilmGrain.from_dict(raw_film_grain) if raw_film_grain else None
+
 
         return cls(
             id = data.get("id", "generic"),
@@ -52,6 +57,7 @@ class FilmStock:
             weights = data.get("weights", [0.33, 0.33, 0.33]),
             params = data.get("params", {"slope": 1.8, "toe": 0.2, "shoulder": 0.8}),
             spectral_points = data.get("spectral_points", None),
-            hd_curves = parsed_hd_curves
+            hd_curves = parsed_hd_curves,
+            film_grain = parsed_film_grain
         )
 

@@ -19,7 +19,7 @@
 
 import torch
 
-from ..node_config import FILM_FORMAT_NAMES, FILM_FORMAT_MAP, RESOLUTIONS
+from ..node_config import FILM_FORMAT_NAMES, FILM_FORMAT_MAP
 from ..models.filmformat import FilmFormat
 from ..models.latentsize import LatentSize
 

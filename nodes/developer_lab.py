@@ -19,24 +19,28 @@
 
 import logging
 
+
 from ..node_config import STOCK_MAP
 
 from ..models.camera import Camera
 from ..models.filmstock import FilmStock
+from ..models.filmgrain import FilmGrain
 
+from ..src.srgb import linear_to_srgb_torch
 from ..src.spectral import get_spectral_image
 from ..src.lut import get_generalized_sigmoid_lut, get_hd_curve_lut
+from ..src.filmgrain import get_film_grain_image
 
 class DeveloperLab:
     @classmethod
     def INPUT_TYPES(s):
         return {
             "required": { 
-                "image": ("IMAGE",),
                 "camera": ("CAMERA",),
-                "developer": (["None"], ),
+                "developer": (["None"],),
             },
             "optional": {
+                "apply_film_grain": ("BOOLEAN", {"default": True}),
                 "precision": ("INT", {"default": 4096, "min": 256, "max": 65536, "step": 256}),
                 "exposure_index": ("FLOAT", {"default": 0.03, "min": 0.00, "max": 1.00, "step": 0.01}),
                 "N_development": ("INT", {"default": 0.0, "min": -3.0, "max": 3.0, "step": 1}),
@@ -54,11 +58,12 @@ class DeveloperLab:
     CATEGORY = "JBNodes"
     DESCRIPTION = """Simulate black and white film stocks with customizable development processes."""
 
-    def build_spectral_image(self, image, camera, precision, exposure_index, N_development, developer = None):
+    def build_spectral_image(self, camera, apply_film_grain, precision, exposure_index, N_development, developer = None):
         
         if isinstance(camera, Camera):
             film_stock = camera.film_stock
             illuminant_key = camera.illuminant_key
+            image = linear_to_srgb_torch(camera.image)
         else:
             return (None, None) 
         
@@ -82,10 +87,15 @@ class DeveloperLab:
                     curve = c
                     break
 
+        # Apply the film grain tot he linear image before applying the characteristic curve
+        if film_stock.film_grain and apply_film_grain and developer != "None":
+            image = get_film_grain_image(image, **film_stock.film_grain.__dict__)
+
         slope = params.get("slope", 1.8)
         toe = params.get("toe", 0.2)
         shoulder = params.get("shoulder", 0.8)
 
+        # Get the characteristic curve LUT
         if not curve:
             char_lut = get_generalized_sigmoid_lut(slope, toe, shoulder, precision)
         else:

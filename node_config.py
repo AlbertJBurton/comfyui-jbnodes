@@ -29,6 +29,7 @@ CONFIG_DIR = os.path.join(CURRENT_DIR, "config")
 GLSL_DIR = os.path.join(CURRENT_DIR, "glsl")
 
 FILM_STOCK_JSON_PATH = os.path.join(CONFIG_DIR, "film_stocks.json")
+FILM_FORMAT_JSON_PATH = os.path.join(CONFIG_DIR, "film_formats.json")
 FILTER_JSON_PATH = os.path.join(CONFIG_DIR, "wratten_filters.json")
 ILLUMINANT_JSON_PATH = os.path.join(CONFIG_DIR, "illuminants.json")
 CONTRAST_FILTER_JSON_PATH = os.path.join(CONFIG_DIR, "contrast_filters.json")
@@ -38,6 +39,9 @@ CAMERA_JSON_PATH = os.path.join(CONFIG_DIR, "cameras.json")
 
 with open(FILM_STOCK_JSON_PATH, 'r') as film:
     STOCK_DATA = json.load(film)
+
+with open(FILM_FORMAT_JSON_PATH, 'r') as format:
+    FORMAT_DATA = json.load(format)
 
 with open(FILTER_JSON_PATH, 'r') as filter:
     FILTER_DATA = json.load(filter)
@@ -82,7 +86,7 @@ async def get_latent_sizes(request):
     film_format_name = request.rel_url.query.get("film_format", "")
     sizes = [] # default
 
-    for format in STOCK_DATA.get("film_formats", []):
+    for format in FORMAT_DATA.get("film_formats", []):
         if format.get("name") == film_format_name:
             sizes = format.get("latent_sizes", [])
             if sizes:
@@ -129,7 +133,7 @@ for group in STOCK_DATA["film_stock_groups"]:
 
 FILM_FORMAT_MAP = {}
 FILM_FORMAT_NAMES = []
-for film_size in STOCK_DATA["film_formats"]:
+for film_size in FORMAT_DATA["film_formats"]:
         FILM_FORMAT_MAP[film_size["name"]] = film_size
         FILM_FORMAT_NAMES.append(film_size["name"])
 
@@ -181,8 +185,3 @@ for camera in CAMERA_DATA["cameras"]:
     CAMERA_MAP[camera["name"]] = camera
     CAMERA_NAMES.append(camera["name"])
 
-RESOLUTIONS = [
-    "Standard", 
-    "High Resolution", 
-    "Ultra High Resolution" 
-]

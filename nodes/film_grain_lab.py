@@ -17,18 +17,10 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 '''
 
-import os
 import logging
-import torch
-import numpy as np
-
-try:
-    import moderngl
-except ImportError:
-    logging.warning("[comfyui-jbnodes]: moderngl not installed. Film grain node will not function. Run: pip install moderngl")
-    moderngl = None
 
 from ..node_config import GLSL_DIR
+from ..src.filmgrain import get_film_grain_image
 
 class FilmGrainLab:
     @classmethod
@@ -38,7 +30,7 @@ class FilmGrainLab:
                 "image": ("IMAGE",),
             },
             "optional": {
-                "iso": ("INT", {"default": 100, "min": 25, "max": 3200, "step": 1}),
+                "rms_granularity": ("FLOAT", {"default": 8.0, "min": 1.0, "max": 50.0, "step": 0.1}),
                 "film_size": (["135","120","4x5","8x10"], {}),
                 "emulsion_type": (["Cubic", "Tabular"], {}),
                 "film_grit": ("FLOAT", {"default": 0.2, "min": 0.0, "max": 1.0, "step": 0.01}),
@@ -46,7 +38,6 @@ class FilmGrainLab:
                 "emulsion_softness": ("FLOAT", {"default": 0.75, "min": 0.00, "max": 1.50, "step": 0.01}),
                 "blend_mode": (["Soft Light", "Overlay", "Linear Light"], {}),
                 "luminance_peak_bias": ("FLOAT", {"default": 0.50, "min": 0.00, "max": 1.00, "step": 0.01}),
-                "signal_noise_ratio": ("FLOAT", {"default": 1.00, "min": 0.0, "max": 2.0, "step": 0.01}),
                 "algorithmic_octaves": ("INT", {"default": 2, "min": 1, "max": 4, "step": 1}),
                 "morphological_variance": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 2.0, "step": 0.1}),
                 "temporal_entropy": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 2.0, "step": 0.1}),
@@ -60,117 +51,8 @@ class FilmGrainLab:
     DESCRIPTION = "Execute custom GLSL shaders with an extended parameter set using moderngl."
 
     def apply_shader(self, image, **kwargs):
-        if moderngl is None:
-            logging.error("[comfyui-jbnodes] moderngl is not installed. Please run: pip install moderngl")
-            return (image,)
-            
-        batch_size, height, width, channels = image.shape
 
-        film_width = 36.0 if kwargs.get("film_size", "135") == "135" else (70.0 if kwargs.get("film_size") == "120" else (120.0 if kwargs.get("film_size") == "4x5" else 240.0))
-        grain_type = 0 if kwargs.get("emulsion_type", "Cubic") == "Cubic" else 1
-        blend = 0 if kwargs.get("blend_mode", "Soft Light") == "Soft Light" else (1 if kwargs.get("blend_mode") == "Overlay" else 2)
+        result = get_film_grain_image(image, **kwargs)
 
-        try:
-            shader_path = os.path.join(GLSL_DIR, "film_grain.glsl")
-            with open(shader_path, "r") as f:
-                shader_code = f.read()
-
-            shader_path = os.path.join(GLSL_DIR, "vertex.glsl")
-            with open(shader_path, "r") as f:
-                vertex_shader = f.read()
-        except FileNotFoundError:
-            logging.error("[comfyui-jbnodes] Shader GLSL file not found")
-            return (image,)
-
-        try:
-            # Force EGL backend. Ubuntu 24.04 (Wayland) explicitly blocks headless GLX/X11 
-            # contexts, causing 'BadAccess' during X_GLXMakeCurrent.
-            ctx = moderngl.create_context(standalone=True, backend='egl')
-        except Exception as e:
-            logging.warning(f"[comfyui-jbnodes] EGL context failed, falling back to auto-detect: {e}")
-            try:
-                ctx = moderngl.create_context(standalone=True)
-            except Exception as e2:
-                logging.error(f"[comfyui-jbnodes] Failed to initialize moderngl context: {e2}")
-                return (image,)
-
-        # Simple 2D full screen quad
-        vertices = np.array([
-            # x,    y,      u,   v
-            -1.0, -1.0,   0.0, 0.0,
-             1.0, -1.0,   1.0, 0.0,
-            -1.0,  1.0,   0.0, 1.0,
-             1.0,  1.0,   1.0, 1.0,
-        ], dtype='f4')
-        
-        vbo = ctx.buffer(vertices.tobytes())        
-        
-        try:
-            prog = ctx.program(vertex_shader=vertex_shader, fragment_shader=shader_code)
-        except Exception as e:
-            logging.error(f"[comfyui-jbnodes] Shader Compilation Failed:\n{e}")
-            ctx.release()
-            return (image,)
-            
-        vao = ctx.vertex_array(prog, [(vbo, '2f 2f', 'in_vert', 'in_texcoord')])
-        out_images = []
-        
-        # Process each image in the latent batch sequentially
-        for i in range(batch_size):
-            img_batch = image[i].numpy()
-            
-            # Moderngl prefers 4-channel textures for float32 (RGBA)
-            if channels == 3:
-                alpha = np.ones((height, width, 1), dtype=np.float32)
-                img_batch = np.concatenate([img_batch, alpha], axis=-1)
-                
-            texture = ctx.texture((width, height), 4, img_batch.tobytes(), dtype='f4')
-            texture.use(0)
-            
-            # Safely bind uniforms if they are requested in the shader program
-            if 'image' in prog:
-                prog['image'].value = 0
-            if 'resolution' in prog:
-                prog['resolution'].value = (width, height)
-                
-            # Inject calculated custom variables
-            if 'film_width' in prog: prog['film_width'].value = film_width
-            if 'grain_type' in prog: prog['grain_type'].value = grain_type
-            if 'blend' in prog: prog['blend'].value = blend
-                
-            for key, val in kwargs.items():
-                if key in prog:
-                    prog[key].value = val
-                    
-            # Setup an empty framebuffer to catch the GL execution
-            fbo_texture = ctx.texture((width, height), 4, dtype='f4')
-            fbo = ctx.framebuffer(color_attachments=[fbo_texture])
-            fbo.use()
-            
-            # Render the quad using the active shader program
-            vao.render(moderngl.TRIANGLE_STRIP)
-            
-            # Pull the data back to CPU and reshape it
-            out_data = fbo_texture.read()
-            out_img = np.frombuffer(out_data, dtype = np.float32).copy().reshape((height, width, 4))
-            
-            # Strip the temporary alpha channel if the original input was standard RGB
-            if channels == 3:
-                out_img = out_img[..., :3]
-                
-            out_images.append(torch.from_numpy(out_img))
-            
-            # Clean up the iteration resources immediately to prevent VRAM spiking
-            texture.release()
-            fbo_texture.release()
-            fbo.release()
-            
-        # Nuke the context footprint
-        vbo.release()
-        prog.release()
-        vao.release()
-        ctx.release()
-        
-        # Clamp bounds strictly since GL math can push values outside the 0.0-1.0 PyTorch standard
-        result = torch.clamp(torch.stack(out_images), 0.0, 1.0)
         return (result,)
+           

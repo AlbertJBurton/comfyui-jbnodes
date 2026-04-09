@@ -23,10 +23,9 @@ out vec4 FragColor;
 uniform sampler2D image;
 
 // --- CUSTOM UNIFORMS ---
-uniform int iso; // ISO Scale 
+uniform float rms_granularity; // RMS Granularity (e.g., 8 for T-MAX 100, 17 for Tri-X 400)
 uniform float morphological_variance; // Morphological Variance 
 uniform float luminance_peak_bias; // Luminance Peak Bias 
-uniform float signal_noise_ratio; // signal_noise Ratio 
 uniform float temporal_entropy; // Temporal Entropy 
 uniform float film_grit; // Film Grit
 uniform float halation; // Halation Strength
@@ -220,14 +219,15 @@ void main() {
     float formatMultiplier = 36.0 / film_width;
     
     // Step 1: Coordinate Normalization
-    float safe_iso = max(float(iso), 1.0); 
+    float safe_rms = max(rms_granularity, 1.0); 
     
-    // Base grain size as a fraction of image width (e.g., 0.2% of width for ISO 100, 35mm)
+    // Base grain size as a fraction of image width
     // This makes the grain size resolution-independent.
     float baseGrainUV = 0.002;
     
-    // Scale the grain size down as the physical format gets larger
-    float scaleFactorUV = sqrt(safe_iso / 100.0) * baseGrainUV * formatMultiplier;
+    // Scale the grain size down as the physical format gets larger,
+    // and scale it up based on RMS Granularity (baseline RMS 8.0 = 1.0 scale)
+    float scaleFactorUV = (safe_rms / 8.0) * baseGrainUV * formatMultiplier;
     
     // Calculate aspect ratio to keep grains square
     float aspect = res.y / res.x;
@@ -310,7 +310,10 @@ void main() {
     }
 
     // Step 5: Integration and Photometric Blending
-    float n_final = (n_raw - 0.5) * M * signal_noise_ratio;
+    // Map RMS Granularity to a visual intensity/amplitude. 
+    // e.g., RMS 8 -> ~0.16 intensity, RMS 17 -> ~0.34 intensity
+    float intensity = safe_rms * 0.02;
+    float n_final = (n_raw - 0.5) * M * intensity;
     
     vec3 grainBlend = clamp(vec3(n_final + 0.5), 0.0, 1.0);
     vec3 finalColor = applyBlend(baseColor.rgb, grainBlend, blend);
