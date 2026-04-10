@@ -18,7 +18,7 @@
 '''
 
 from ..node_config import GRAYSCALE_NAMES, GRAYSCALE_MAP
-from ..src.grayscale import get_grayscale_image
+from ..src.grayscale_lib import get_grayscale_image
 
 class GrayscaleLab:
     @classmethod

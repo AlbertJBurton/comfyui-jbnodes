@@ -24,7 +24,7 @@ from PIL import Image, ImageOps
 
 from ..node_config import CONTRAST_NAMES, CONTRAST_MAP
 
-from ..src.darkroom import get_print_image
+from ..src.darkroom_lib import get_print_image
 
 class PrintLabSplitGrade:
     @classmethod

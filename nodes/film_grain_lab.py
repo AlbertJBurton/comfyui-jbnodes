@@ -20,14 +20,14 @@
 import logging
 
 from ..node_config import GLSL_DIR
-from ..src.filmgrain import get_film_grain_image
+from ..src.filmgrain_lib import get_film_grain_image
 
 class FilmGrainLab:
     @classmethod
     def INPUT_TYPES(s):
         return {
             "required": {
-                "image": ("IMAGE",),
+                "camera_roll": ("CAMERA", ),
             },
             "optional": {
                 "rms_granularity": ("FLOAT", {"default": 8.0, "min": 1.0, "max": 50.0, "step": 0.1}),
@@ -44,15 +44,16 @@ class FilmGrainLab:
             },
         }
 
-    RETURN_TYPES = ("IMAGE",)
-    RETURN_NAMES = ("image",)
+    RETURN_TYPES = ("CAMERA", "IMAGE")
+    RETURN_NAMES = ("camera_roll", "preview")
     FUNCTION = "apply_shader"
     CATEGORY = "JBNodes"
-    DESCRIPTION = "Execute custom GLSL shaders with an extended parameter set using moderngl."
+    DESCRIPTION = "Film grain emulation with GLSL shaders."
 
-    def apply_shader(self, image, **kwargs):
+    def apply_shader(self, camera_roll, **kwargs):
 
-        result = get_film_grain_image(image, **kwargs)
+        result = get_film_grain_image(camera_roll.image, **kwargs)
+        camera_roll.image = result
 
-        return (result,)
+        return (camera_roll, result)
            

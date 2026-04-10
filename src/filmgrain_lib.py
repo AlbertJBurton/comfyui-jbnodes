@@ -28,7 +28,8 @@ except ImportError:
     logging.warning("[comfyui-jbnodes]: moderngl not installed. Film grain node will not function. Run: pip install moderngl")
     moderngl = None
 
-from ..node_config import GLSL_DIR
+from ..node_config import GLSL_DIR, FILM_FORMAT_MAP
+from ..models.filmformat import FilmFormat
 
 def get_film_grain_image(image, **kwargs):
         
@@ -38,7 +39,16 @@ def get_film_grain_image(image, **kwargs):
 
     batch_size, height, width, channels = image.shape
 
-    film_width = 36.0 if kwargs.get("film_size", "135") == "135" else (70.0 if kwargs.get("film_size") == "120" else (120.0 if kwargs.get("film_size") == "4x5" else 240.0))
+    film_size_str = kwargs.get("film_size", "135")
+    film_format = FilmFormat.from_dict(FILM_FORMAT_MAP.get(film_size_str))
+
+    if film_format and film_format.frame_size:
+        film_width = film_format.frame_size.width
+    else:
+        film_width = 36.0
+        logging.warning("[comfyui-jbnodes] Film format ({film_size_str}) could not be loaded, reverting to default 135 size (36mm).")
+
+        
     grain_type = 0 if kwargs.get("emulsion_type", "Cubic") == "Cubic" else 1
     blend = 0 if kwargs.get("blend_mode", "Soft Light") == "Soft Light" else (1 if kwargs.get("blend_mode") == "Overlay" else 2)
 
@@ -51,7 +61,7 @@ def get_film_grain_image(image, **kwargs):
         with open(shader_path, "r") as f:
             vertex_shader = f.read()
     except FileNotFoundError:
-        logging.error("[comfyui-jbnodes] Shader GLSL file not found")
+        logging.error("[comfyui-jbnodes] Shader GLSL file not found.")
         return (image,)
 
     try:

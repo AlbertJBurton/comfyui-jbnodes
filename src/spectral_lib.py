@@ -24,8 +24,8 @@ import colour
 
 from colour.recovery import RGB_to_sd_Smits1999
 
-from .srgb import srgb_to_linear_torch, linear_to_srgb_torch
-from .interpolate import pchip_interpolate_numpy
+from .srgb_lib import srgb_to_linear_torch, linear_to_srgb_torch
+from .interpolate_lib import pchip_interpolate_numpy
 
 from comfy import model_management
 

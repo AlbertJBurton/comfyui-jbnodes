@@ -19,7 +19,7 @@
 
 from ..node_config import FILTER_NAMES, FILTER_MAP
 
-from ..src.filters import get_filter_image
+from ..src.filters_lib import get_filter_image
 
 class FilterLab:
     @classmethod

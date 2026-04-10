@@ -23,7 +23,7 @@ from comfy import model_management
 
 from ..node_config import GRADED_PAPER_NAMES, GRADED_PAPER_MAP, CONTRAST_MAP
 
-from ..src.darkroom import get_print_image
+from ..src.darkroom_lib import get_print_image
 
 class PrintLabGraded:
     @classmethod

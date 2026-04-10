@@ -49,14 +49,14 @@ class CropFilmAspectRatio:
 
         if orientation == "Auto":
             if width > height:
-                target_aspect = film_format_obj["frame_size"][0] / film_format_obj["frame_size"][1]
+                target_aspect = film_format_obj["frame_size"]["width"] / film_format_obj["frame_size"]["height"]
             else:            
-                target_aspect = film_format_obj["frame_size"][1] / film_format_obj["frame_size"][0]
+                target_aspect = film_format_obj["frame_size"]["height"] / film_format_obj["frame_size"]["width"]
         else:
             if orientation == "Landscape":
-                target_aspect = film_format_obj["frame_size"][0] / film_format_obj["frame_size"][1]
+                target_aspect = film_format_obj["frame_size"]["width"] / film_format_obj["frame_size"]["height"]
             else:
-                target_aspect = film_format_obj["frame_size"][1] / film_format_obj["frame_size"][0]
+                target_aspect = film_format_obj["frame_size"]["height"] / film_format_obj["frame_size"]["width"]
 
         # Use a small tolerance for floating point comparisons to prevent microscopic 1-pixel jitters
         if abs(current_aspect - target_aspect) < 0.001:

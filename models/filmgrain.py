@@ -22,7 +22,7 @@ from dataclasses import dataclass, field
 @dataclass
 class FilmGrain:
     rms_granularity: float = 8.0
-    film_size: str = "120"
+    film_size: str = "135"
     emulsion_type: str = "Cubic"
     film_grit: float = 0.2
     halation: float = 0.1
@@ -37,7 +37,7 @@ class FilmGrain:
     def from_dict(cls, data: dict):
         return cls(
             rms_granularity = float(data.get("rms_granularity", 8.0)),
-            film_size = data.get("film_size", "120"),
+            film_size = data.get("film_size", "135"),
             emulsion_type = data.get("emulsion_type", "Cubic"),
             film_grit = float(data.get("film_grit", 0.2)),
             halation = float(data.get("halation", 0.1)),

@@ -21,8 +21,8 @@ import torch
 
 from comfy import model_management
 
-from .lut import apply_1d_lut
-from .interpolate import pchip_interpolate_torch
+from .lut_lib import apply_1d_lut
+from .interpolate_lib import pchip_interpolate_torch
 
 def get_print_image(film_negative, contrast_factor=None, exposure_secs=10.0, hd_curve_points=None, d_max=2.1, d_min=0.04, precision=4096):
     """

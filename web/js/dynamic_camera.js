@@ -32,11 +32,14 @@ async function updateCameraLabWidgets(cameraNode, formatName, savedCamera = null
             cameraWidget.options.values = cameras;
             
             // Determine the target value: saved value, current value, or fallback to first option
-            let targetCamera = savedCamera || cameraWidget.value;
+            let targetCamera = savedCamera || cameraNode.savedCamera || cameraWidget.value;
             if (cameras.length > 0 && !cameras.includes(targetCamera)) {
                 targetCamera = cameras[0];
             }
             cameraWidget.value = targetCamera;
+            if (cameras.includes(targetCamera)) {
+                cameraNode.savedCamera = null;
+            }
 
             response = await api.fetchApi(`/jbnodes/film_stocks?film_format=${encodeURIComponent(formatName)}`);
             const films = await response.json();
@@ -44,11 +47,18 @@ async function updateCameraLabWidgets(cameraNode, formatName, savedCamera = null
             // Mutate the target widget's available options
             filmWidget.options.values = films;
             
-            let targetFilm = savedFilm || filmWidget.value;
+            let targetFilm = savedFilm || cameraNode.savedFilm || filmWidget.value;
             if (films.length > 0 && !films.includes(targetFilm)) {
                 targetFilm = films[0];
             }
             filmWidget.value = targetFilm;
+            if (films.includes(targetFilm)) {
+                cameraNode.savedFilm = null;
+            }
+            
+            if (filmWidget.callback) {
+                filmWidget.callback(targetFilm);
+            }
             
             // Force ComfyUI to redraw the node visually so the UI updates
             app.graph.setDirtyCanvas(true, false);
@@ -128,9 +138,11 @@ app.registerExtension({
                     
                     if (cameraIndex !== -1 && cameraIndex < info.widgets_values.length) {
                         savedCamera = info.widgets_values[cameraIndex];
+                        this.savedCamera = savedCamera;
                     }
                     if (filmIndex !== -1 && filmIndex < info.widgets_values.length) {
                         savedFilm = info.widgets_values[filmIndex];
+                        this.savedFilm = savedFilm;
                     }
                 }
 
@@ -167,8 +179,13 @@ app.registerExtension({
                             originalCallback.apply(this, [value, ...args]);
                         }
 
-                        const formatName = value || formatWidget.value;
-                        if (!formatName) return;
+                        let formatName = value;
+                        if (typeof value === "object" && value !== null) {
+                            formatName = formatWidget.value;
+                        } else {
+                            formatName = value || formatWidget.value;
+                        }
+                        if (!formatName || typeof formatName !== "string") return;
 
                         // Find all connected CameraLab nodes and update them
                         const output = node.outputs?.find(o => o.name === "film_format" || o.type === "FILMFORMAT");
@@ -182,7 +199,7 @@ app.registerExtension({
                                     const targetNode = app.graph.getNodeById(link.target_id);
                                     if (!targetNode) continue;
                                     
-                                    if (targetNode.comfyClass === "CameraLab") {
+                                    if (targetNode.type === "CameraLab") {
                                         cameraLabs.push(targetNode);
                                     } else if (targetNode.type === "Reroute") {
                                         const rerouteOutput = targetNode.outputs ? targetNode.outputs[0] : null;

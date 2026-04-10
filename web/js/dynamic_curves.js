@@ -37,11 +37,15 @@ async function updateDeveloperLabDeveloperWidget(spectralNode, stockName, savedD
         
         developerWidget.options.values = curves;
         
-        let targetDeveloper = savedDeveloper || developerWidget.value;
+        let targetDeveloper = savedDeveloper || spectralNode.savedDeveloper || developerWidget.value;
         if (!curves.includes(targetDeveloper)) {
             targetDeveloper = curves[0];
         }
         developerWidget.value = targetDeveloper;
+        
+        if (curves.includes(targetDeveloper)) {
+            spectralNode.savedDeveloper = null;
+        }
         
         app.graph.setDirtyCanvas(true, true);
     } catch (err) {
@@ -73,7 +77,7 @@ function getFilmFromLink(linkId, app) {
             }
         }
         
-        if (originNode.comfyClass === "CameraLab") {
+        if (originNode.type === "CameraLab") {
             const filmWidget = originNode.widgets?.find(w => w.name === "film");
             if (filmWidget) {
                 return filmWidget.value;
@@ -117,7 +121,7 @@ app.registerExtension({
                                     const targetNode = app.graph.getNodeById(link.target_id);
                                     if (!targetNode) continue;
                                     
-                                    if (targetNode.comfyClass === "DeveloperLab") {
+                                    if (targetNode.type === "DeveloperLab") {
                                         developerLabs.push(targetNode);
                                     } else if (targetNode.type === "Reroute") {
                                         const rerouteOutput = targetNode.outputs ? targetNode.outputs[0] : null;
@@ -177,6 +181,7 @@ app.registerExtension({
                     const developerIndex = this.widgets?.findIndex(w => w.name === "developer");
                     if (developerIndex !== -1 && developerIndex < info.widgets_values.length) {
                         savedDeveloper = info.widgets_values[developerIndex];
+                        this.savedDeveloper = savedDeveloper;
                     }
                 }
 

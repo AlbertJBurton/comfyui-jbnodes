@@ -21,7 +21,7 @@ import torch
 
 from comfy import model_management
 
-from .srgb import srgb_to_linear_torch, linear_to_srgb_torch
+from .srgb_lib import srgb_to_linear_torch, linear_to_srgb_torch
 
 def get_grayscale_image(image, weights):
     '''

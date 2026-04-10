@@ -36,11 +36,14 @@ class Camera:
     @classmethod
     def from_dict(cls, data: dict):
 
+        film_format_data = data.get("film_format")
+        film_stock_data = data.get("film_stock")
+
         return cls(
             name = data.get("name", "Generic Camera"),
             illuminant_key = data.get("illuminant_key", "D65"),
-            film_format = None, 
-            film_stock = None,  
-            image = None        
+            film_format = FilmFormat.from_dict(film_format_data) if isinstance(film_format_data, dict) else None,
+            film_stock = FilmStock.from_dict(film_stock_data) if isinstance(film_stock_data, dict) else None,  
+            image = data.get("image", None)        
         )
 

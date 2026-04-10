@@ -26,17 +26,17 @@ from ..models.camera import Camera
 from ..models.filmstock import FilmStock
 from ..models.filmgrain import FilmGrain
 
-from ..src.srgb import linear_to_srgb_torch
-from ..src.spectral import get_spectral_image
-from ..src.lut import get_generalized_sigmoid_lut, get_hd_curve_lut
-from ..src.filmgrain import get_film_grain_image
+from ..src.srgb_lib import linear_to_srgb_torch
+from ..src.spectral_lib import get_spectral_image
+from ..src.lut_lib import get_generalized_sigmoid_lut, get_hd_curve_lut
+from ..src.filmgrain_lib import get_film_grain_image
 
 class DeveloperLab:
     @classmethod
     def INPUT_TYPES(s):
         return {
             "required": { 
-                "camera": ("CAMERA",),
+                "camera_roll": ("CAMERA",),
                 "developer": (["None"],),
             },
             "optional": {
@@ -53,17 +53,17 @@ class DeveloperLab:
         return True
 
     RETURN_TYPES = ("IMAGE", "IMAGE")
-    RETURN_NAMES = ("preview", "film_negative")
+    RETURN_NAMES = ("contact_print", "film_negative")
     FUNCTION = "build_spectral_image"
     CATEGORY = "JBNodes"
     DESCRIPTION = """Simulate black and white film stocks with customizable development processes."""
 
-    def build_spectral_image(self, camera, apply_film_grain, precision, exposure_index, N_development, developer = None):
+    def build_spectral_image(self, camera_roll, apply_film_grain, precision, exposure_index, N_development, developer = None):
         
-        if isinstance(camera, Camera):
-            film_stock = camera.film_stock
-            illuminant_key = camera.illuminant_key
-            image = linear_to_srgb_torch(camera.image)
+        if isinstance(camera_roll, Camera):
+            film_stock = camera_roll.film_stock
+            illuminant_key = camera_roll.illuminant_key
+            image = linear_to_srgb_torch(camera_roll.image)
         else:
             return (None, None) 
         
@@ -87,7 +87,7 @@ class DeveloperLab:
                     curve = c
                     break
 
-        # Apply the film grain tot he linear image before applying the characteristic curve
+        # Apply the film grain to the linear image before applying the characteristic curve
         if film_stock.film_grain and apply_film_grain and developer != "None":
             image = get_film_grain_image(image, **film_stock.film_grain.__dict__)
 

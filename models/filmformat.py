@@ -21,19 +21,20 @@ from dataclasses import dataclass, field
 from typing import List, Dict, Optional
 
 from .latentsize import LatentSize
+from .framesize import FrameSize
 
 @dataclass
 class FilmFormat:
     name: str
     description: str
-    frame_size: List[float] = field(default_factory = lambda: [1.0, 1.0]) # [width_mm, height_mm]
+    frame_size: FrameSize = field(default_factory=FrameSize)
     latent_sizes: Optional[List[Dict[str, int]]] = None  # List of dicts with 'name', 'width', 'height'
 
     @classmethod
     def from_dict(cls, data: dict):
         return cls(
-            name = data.get("name", "Unknown Format"),
-            description = data.get("description", ""),
-            frame_size = data.get("frame_size", [1.0, 1.0]),
+            name = data.get("name", "Default 35mm"),
+            description = data.get("description", "Default 35mm format"),
+            frame_size = FrameSize.from_dict(data.get("frame_size", {})),
             latent_sizes = [LatentSize.from_dict(size) for size in data.get("latent_sizes", [])] if data.get("latent_sizes") else None
         )

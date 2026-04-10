@@ -3,10 +3,10 @@
     {
       "name": "135",
       "description": "Standard 35mm format. 36mm x 24mm frame size.",
-      "frame_size": [
-        36.0,
-        24.0
-      ],
+      "frame_size": {
+        "width": 36.0,
+        "height": 24.0
+      },
       "latent_sizes": [
         {
           "name": "Standard (768x512)",
@@ -28,10 +28,10 @@
     {
       "name": "120 (6x4.5)",
       "description": "Medium format. 60mm x 45mm frame size.",
-      "frame_size": [
-        60.0,
-        45.0
-      ],
+      "frame_size": {
+        "width": 60.0,
+        "height": 45.0
+      },
       "latent_sizes": [
         {
           "name": "Standard (768x576)",
@@ -53,10 +53,10 @@
     {
       "name": "120 (6x6)",
       "description": "Medium format. 60mm x 60mm frame size.",
-      "frame_size": [
-        60.0,
-        60.0
-      ],
+      "frame_size": {
+        "width": 60.0,
+        "height": 60.0
+      },
       "latent_sizes": [
         {
           "name": "Standard (512x512)",
@@ -78,10 +78,10 @@
     {
       "name": "120 (6x7)",
       "description": "Medium format. 60mm x 70mm frame size.",
-      "frame_size": [
-        70.0,
-        60.0
-      ],
+      "frame_size": {
+        "width": 70.0,
+        "height": 60.0
+      },
       "latent_sizes": [
         {
           "name": "Standard (768x896)",
@@ -103,10 +103,10 @@
     {
       "name": "120 (6x9)",
       "description": "Medium format. 60mm x 90mm frame size.",
-      "frame_size": [
-        90.0,
-        60.0
-      ],
+      "frame_size": {
+        "width": 90.0,
+        "height": 60.0
+      },
       "latent_sizes": [
         {
           "name": "Standard (512x768)",
@@ -128,10 +128,10 @@
     {
       "name": "4x5",
       "description": "Large format. 4 inch x 5 inch frame size.",
-      "frame_size": [
-        127.0,
-        101.6
-      ],
+      "frame_size": {
+        "width": 127.0,
+        "height": 101.6
+      },
       "latent_sizes": [
         {
           "name": "Standard (512x640)",
@@ -153,10 +153,10 @@
     {
       "name": "8x10",
       "description": "Large format. 8 inch x 10 inch frame size.",
-      "frame_size": [
-        254.0,
-        203.2
-      ],
+      "frame_size": {
+        "width": 254.0,
+        "height": 203.2
+      },
       "latent_sizes": [
         {
           "name": "Standard (512x640)",

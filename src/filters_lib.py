@@ -24,7 +24,7 @@ import colour
 from colour.recovery import RGB_to_sd_Smits1999
 from colour.models import XYZ_to_sRGB
 
-from .srgb import srgb_to_linear_torch, linear_to_srgb_torch
+from .srgb_lib import srgb_to_linear_torch, linear_to_srgb_torch
 
 from comfy import model_management
 
