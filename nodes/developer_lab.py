@@ -20,7 +20,7 @@
 import logging
 
 
-from ..node_config import STOCK_MAP
+from ..node_config import FILM_STOCK_MAP
 
 from ..models.camera import Camera
 from ..models.filmstock import FilmStock
@@ -72,7 +72,7 @@ class DeveloperLab:
             params = film_stock.params
             stock_name = film_stock.name
         else:
-            stock_data = STOCK_MAP.get(film_stock, {})
+            stock_data = FILM_STOCK_MAP.get(film_stock, {})
             weights = stock_data.get("weights", [0.33, 0.33, 0.33])
             params = stock_data.get("params", {"slope": 1.8, "toe": 0.2, "shoulder": 0.8})
             stock_name = str(film_stock)

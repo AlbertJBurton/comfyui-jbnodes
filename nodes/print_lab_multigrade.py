@@ -17,7 +17,7 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 '''
 
-from ..node_config import CONTRAST_NAMES, CONTRAST_MAP
+from ..node_config import CONTRAST_FILTER_NAMES, CONTRAST_FILTER_MAP
 
 from ..src.darkroom_lib import get_print_image
 
@@ -29,7 +29,7 @@ class PrintLabMultigrade:
                 "film_negative": ("IMAGE",),
             },
             "optional": {
-                "contrast_filter": (CONTRAST_NAMES, {"default": "2"}),
+                "contrast_filter": (CONTRAST_FILTER_NAMES, {"default": "2"}),
                 "exposure_secs": ("FLOAT", {"default": 10.0, "min": 0.0, "max": 20.0, "step": 0.1}),
             },
         }
@@ -42,7 +42,7 @@ class PrintLabMultigrade:
 
     def print_image(self, film_negative, contrast_filter, exposure_secs):
 
-        filter_data = CONTRAST_MAP.get(contrast_filter)
+        filter_data = CONTRAST_FILTER_MAP.get(contrast_filter)
         contrast_factor = filter_data.get("factor")
 
         return get_print_image(film_negative, contrast_factor = contrast_factor, exposure_secs = exposure_secs)

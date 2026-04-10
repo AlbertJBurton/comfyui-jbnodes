@@ -28,7 +28,7 @@ except ImportError:
     logging.warning("[comfyui-jbnodes]: moderngl not installed. Film grain node will not function. Run: pip install moderngl")
     moderngl = None
 
-from ..node_config import GLSL_DIR, FILM_FORMAT_MAP
+from ..node_config import GLSL_DIR, FILM_FORMAT_MAP, FILM_FORMAT_NAME_TO_ID
 from ..models.filmformat import FilmFormat
 
 def get_film_grain_image(image, **kwargs):
@@ -40,7 +40,16 @@ def get_film_grain_image(image, **kwargs):
     batch_size, height, width, channels = image.shape
 
     film_size_str = kwargs.get("film_size", "135")
-    film_format = FilmFormat.from_dict(FILM_FORMAT_MAP.get(film_size_str))
+    film_format_id = FILM_FORMAT_NAME_TO_ID.get(film_size_str)
+    
+    # Fallback to ID if it's already an ID, or try to match prefix for "120"
+    if not film_format_id:
+        if film_size_str in FILM_FORMAT_MAP:
+            film_format_id = film_size_str
+        elif film_size_str == "120":
+            film_format_id = FILM_FORMAT_NAME_TO_ID.get("120 (6x6)") # Default 120 format
+
+    film_format = FilmFormat.from_dict(FILM_FORMAT_MAP.get(film_format_id, {}))
 
     if film_format and film_format.frame_size:
         film_width = film_format.frame_size.width

@@ -17,7 +17,9 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 '''
 
-__version__ = "0.2.3"
+__version__ = "0.2.4"
+
+failed_status = False
 
 print("\n\033[32m[comfyui-jbnodes]\033[0m Loading ComfyUI Nodes for B&W Film Emulation (version {})".format(__version__))
 
@@ -29,9 +31,11 @@ try:
     from .nodes.color_chart_Image import ColorChartImageLoader
     from .nodes.merge_rgb_channels import MergeRGBImageChannel
 except ImportError as e:
+    failed_status = True
     print("\033[31m[comfyui-jbnodes]\033[0m Warning: Failed to import utility nodes. Some functionality may be limited. Error details: {}".format(e))
 finally:
-    print("\033[32m[comfyui-jbnodes]\033[0m Utility nodes loaded.")
+    if not failed_status:
+        print("\033[32m[comfyui-jbnodes]\033[0m Utility nodes loaded successfully.")
 
 ''' --- PHOTOGRAPHY NODES --- '''
 try:
@@ -40,9 +44,11 @@ try:
     from .nodes.film_grain_lab import FilmGrainLab
     from .nodes.developer_lab import DeveloperLab
 except ImportError as e:
+    failed_status = True
     print("\033[31m[comfyui-jbnodes]\033[0m Warning: Failed to import photography nodes. Some functionality may be limited. Error details: {}".format(e))
 finally:
-    print("\033[32m[comfyui-jbnodes]\033[0m Photography nodes loaded.")
+    if not failed_status:
+        print("\033[32m[comfyui-jbnodes]\033[0m Photography nodes loaded successfully.")
 
 ''' --- DARKROOM NODES --- '''
 try:
@@ -50,9 +56,11 @@ try:
     from .nodes.print_lab_graded import PrintLabGraded
     from .nodes.print_lab_splitgrade import PrintLabSplitGrade
 except ImportError as e:
+    failed_status = True
     print("\033[31m[comfyui-jbnodes]\033[0m Warning: Failed to import darkroom nodes. Some functionality may be limited. Error details: {}".format(e))
 finally:
-    print("\033[32m[comfyui-jbnodes]\033[0m Darkroom nodes loaded.")
+    if not failed_status:
+        print("\033[32m[comfyui-jbnodes]\033[0m Darkroom nodes loaded successfully.")
 
 NODE_CLASS_MAPPINGS = {
     "DeveloperLab": DeveloperLab,

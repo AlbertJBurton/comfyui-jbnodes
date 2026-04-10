@@ -18,7 +18,8 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 '''
 
-from ..node_config import FILM_FORMAT_NAMES, FILM_FORMAT_MAP
+from ..node_config import FILM_FORMAT_NAMES, FILM_FORMAT_MAP, FILM_FORMAT_NAME_TO_ID
+from ..models.filmformat import FilmFormat
 
 class CropFilmAspectRatio:
     @classmethod
@@ -40,23 +41,26 @@ class CropFilmAspectRatio:
 
     def enforce_aspect_ratio(self, image, film_format, orientation, shift):
 
-        film_format_obj = FILM_FORMAT_MAP.get(film_format)
-        if not film_format_obj:
+        film_format_id = FILM_FORMAT_NAME_TO_ID.get(film_format, film_format)
+        film_format_dict = FILM_FORMAT_MAP.get(film_format_id)
+        if not film_format_dict:
             return (image, None) # Safety fallback
+            
+        film_format_obj = FilmFormat.from_dict(film_format_dict)
             
         _, height, width, _ = image.shape
         current_aspect = width / height
 
         if orientation == "Auto":
             if width > height:
-                target_aspect = film_format_obj["frame_size"]["width"] / film_format_obj["frame_size"]["height"]
+                target_aspect = film_format_dict["frame_size"]["width"] / film_format_dict["frame_size"]["height"]
             else:            
-                target_aspect = film_format_obj["frame_size"]["height"] / film_format_obj["frame_size"]["width"]
+                target_aspect = film_format_dict["frame_size"]["height"] / film_format_dict["frame_size"]["width"]
         else:
             if orientation == "Landscape":
-                target_aspect = film_format_obj["frame_size"]["width"] / film_format_obj["frame_size"]["height"]
+                target_aspect = film_format_dict["frame_size"]["width"] / film_format_dict["frame_size"]["height"]
             else:
-                target_aspect = film_format_obj["frame_size"]["height"] / film_format_obj["frame_size"]["width"]
+                target_aspect = film_format_dict["frame_size"]["height"] / film_format_dict["frame_size"]["width"]
 
         # Use a small tolerance for floating point comparisons to prevent microscopic 1-pixel jitters
         if abs(current_aspect - target_aspect) < 0.001:

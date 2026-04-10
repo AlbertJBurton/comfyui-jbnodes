@@ -38,7 +38,7 @@ GRAYSCALE_JSON_PATH = os.path.join(CONFIG_DIR, "grayscale.json")
 CAMERA_JSON_PATH = os.path.join(CONFIG_DIR, "cameras.json")
 
 with open(FILM_STOCK_JSON_PATH, 'r') as film:
-    STOCK_DATA = json.load(film)
+    FILM_STOCK_DATA = json.load(film)
 
 with open(FILM_FORMAT_JSON_PATH, 'r') as format:
     FORMAT_DATA = json.load(format)
@@ -47,7 +47,7 @@ with open(FILTER_JSON_PATH, 'r') as filter:
     FILTER_DATA = json.load(filter)
 
 with open(ILLUMINANT_JSON_PATH, 'r') as source:
-    SOURCE_DATA = json.load(source)
+    ILLUMINANT_DATA = json.load(source)
 
 with open(CONTRAST_FILTER_JSON_PATH, 'r') as contrast:
     CONTRAST_FILTER_DATA = json.load(contrast)
@@ -68,14 +68,13 @@ async def get_hd_curves(request):
     stock_name = request.rel_url.query.get("stock_name", "")
     curves = ["None"] # default
     
-    for group in STOCK_DATA.get("film_stock_groups", []):
-        for stock in group.get("stocks", []):
-            if stock.get("name") == stock_name:
-                hd_curves = stock.get("hd_curves", [])
-                if hd_curves:
-                    # Format names as "Developer @ Time mins (Temp C)"
-                    curves = [f"{c['name']} ({c['time']}m at {c['temp']}C)" for c in hd_curves]
-                break
+    for stock in FILM_STOCK_DATA.get("film_stocks", []):
+        if stock.get("name") == stock_name:
+            hd_curves = stock.get("hd_curves", [])
+            if hd_curves:
+                # Format names as "Developer @ Time mins (Temp C)"
+                curves = [f"{c['name']} ({c['time']}m at {c['temp']}C)" for c in hd_curves]
+            break
                 
     return web.json_response(curves)
 
@@ -84,10 +83,11 @@ async def get_hd_curves(request):
 async def get_latent_sizes(request):
     """Returns a list of latent sizes for a given film format by name."""
     film_format_name = request.rel_url.query.get("film_format", "")
+    film_format_id = FILM_FORMAT_NAME_TO_ID.get(film_format_name, film_format_name)
     sizes = [] # default
 
     for format in FORMAT_DATA.get("film_formats", []):
-        if format.get("name") == film_format_name:
+        if format.get("id") == film_format_id:
             sizes = format.get("latent_sizes", [])
             if sizes:
                 sizes = [f"{ls['name']}" for ls in sizes]
@@ -100,10 +100,11 @@ async def get_latent_sizes(request):
 async def get_cameras(request):
     """Returns a list of cameras for a given film format by name."""
     film_format_name = request.rel_url.query.get("film_format", "")
+    film_format_id = FILM_FORMAT_NAME_TO_ID.get(film_format_name, film_format_name)
     cameras = []
 
     for camera in CAMERA_DATA.get("cameras", []):
-        if camera.get("film_format") == film_format_name: 
+        if camera.get("film_format") == film_format_id or camera.get("film_format") == film_format_name: 
             cameras.append(camera.get("name"))
 
     return web.json_response(cameras)
@@ -113,29 +114,30 @@ async def get_cameras(request):
 async def get_film_stocks(request):
     """Returns a list of film stocks for a given film format by name."""
     film_format_name = request.rel_url.query.get("film_format", "")
+    film_format_id = FILM_FORMAT_NAME_TO_ID.get(film_format_name, film_format_name)
     films = []
 
-    for group in STOCK_DATA.get("film_stock_groups", []):
-        for stock in group.get("stocks", []):
-            formats = stock.get("film_formats", [])
-            if film_format_name in formats:
-                films.append(stock.get("name"))
+    for stock in FILM_STOCK_DATA.get("film_stocks", []):
+        formats = stock.get("film_formats", [])
+        if film_format_id in formats or film_format_name in formats:
+            films.append(stock.get("name"))
 
     return web.json_response(films)
 
 # Create mappings
-STOCK_MAP = {}
-STOCK_NAMES = []
-for group in STOCK_DATA["film_stock_groups"]:
-    for stock in group["stocks"]:
-        STOCK_MAP[stock["name"]] = stock
-        STOCK_NAMES.append(stock["name"])
+FILM_STOCK_MAP = {}
+FILM_STOCK_NAMES = []
+for stock in FILM_STOCK_DATA["film_stocks"]:
+    FILM_STOCK_MAP[stock["name"]] = stock
+    FILM_STOCK_NAMES.append(stock["name"])
 
 FILM_FORMAT_MAP = {}
 FILM_FORMAT_NAMES = []
+FILM_FORMAT_NAME_TO_ID = {}
 for film_size in FORMAT_DATA["film_formats"]:
-        FILM_FORMAT_MAP[film_size["name"]] = film_size
+        FILM_FORMAT_MAP[film_size["id"]] = film_size
         FILM_FORMAT_NAMES.append(film_size["name"])
+        FILM_FORMAT_NAME_TO_ID[film_size["name"]] = film_size["id"]
 
 GRAYSCALE_MAP = {}
 GRAYSCALE_NAMES = []
@@ -161,17 +163,17 @@ for filter in FILTER_DATA["filters"]:
         BW_FILTER_MAP[name] = filter
         BW_FILTER_NAMES.append(name)
 
-SOURCE_MAP = {}
-SOURCE_NAMES = []
-for source in SOURCE_DATA["sources"]:
-    SOURCE_MAP[source["label"]] = source
-    SOURCE_NAMES.append(source["label"])
+ILLUMINANT_MAP = {}
+ILLUMINANT_NAMES = []
+for source in ILLUMINANT_DATA["sources"]:
+    ILLUMINANT_MAP[source["label"]] = source
+    ILLUMINANT_NAMES.append(source["label"])
 
-CONTRAST_MAP = {}
-CONTRAST_NAMES = []
+CONTRAST_FILTER_MAP = {}
+CONTRAST_FILTER_NAMES = []
 for filter in CONTRAST_FILTER_DATA["filters"]:
-    CONTRAST_MAP[filter["label"]] = filter
-    CONTRAST_NAMES.append(filter["label"])
+    CONTRAST_FILTER_MAP[filter["label"]] = filter
+    CONTRAST_FILTER_NAMES.append(filter["label"])
 
 GRADED_PAPER_MAP = {}
 GRADED_PAPER_NAMES = []

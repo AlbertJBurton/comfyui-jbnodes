@@ -19,7 +19,7 @@
 
 import torch
 
-from ..node_config import FILM_FORMAT_NAMES, FILM_FORMAT_MAP
+from ..node_config import FILM_FORMAT_NAMES, FILM_FORMAT_MAP, FILM_FORMAT_NAME_TO_ID
 from ..models.filmformat import FilmFormat
 from ..models.latentsize import LatentSize
 
@@ -52,7 +52,8 @@ class FilmAspectRatio:
         width = 1024
         height = 1024
 
-        film_format_obj = FilmFormat.from_dict(FILM_FORMAT_MAP.get(film_format))
+        film_format_id = FILM_FORMAT_NAME_TO_ID.get(film_format, film_format)
+        film_format_obj = FilmFormat.from_dict(FILM_FORMAT_MAP.get(film_format_id, {}))
 
         if not film_format_obj or not isinstance(film_format_obj, FilmFormat):
             print(f"[comfyui-jbnodes] Warning: Film format '{film_format}' not found. Using default aspect ratio.")

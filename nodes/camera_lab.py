@@ -17,7 +17,7 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 '''
 
-from ..node_config import CAMERA_MAP, BW_FILTER_NAMES, BW_FILTER_MAP, STOCK_MAP, FILM_FORMAT_MAP, SOURCE_NAMES, SOURCE_MAP
+from ..node_config import CAMERA_MAP, BW_FILTER_NAMES, BW_FILTER_MAP, FILM_STOCK_MAP, FILM_FORMAT_MAP, FILM_FORMAT_NAME_TO_ID, ILLUMINANT_NAMES, ILLUMINANT_MAP
 
 from ..src.spectral_lib import get_camera_image
 from ..src.filters_lib import get_filter_image
@@ -38,7 +38,7 @@ class CameraLab:
                 "film": ([None],),
             },
             "optional": {
-                "light_source": (SOURCE_NAMES, ),
+                "light_source": (ILLUMINANT_NAMES, ),
             }
         }
 
@@ -62,16 +62,17 @@ class CameraLab:
         elif isinstance(film_format, dict):
             camera_obj.film_format = FilmFormat.from_dict(film_format)
         else:
-            camera_obj.film_format = FilmFormat.from_dict(FILM_FORMAT_MAP.get(film_format))
+            film_format_id = FILM_FORMAT_NAME_TO_ID.get(film_format, film_format)
+            camera_obj.film_format = FilmFormat.from_dict(FILM_FORMAT_MAP.get(film_format_id, {}))
 
-        film_obj = FilmStock.from_dict(STOCK_MAP.get(film))
+        film_obj = FilmStock.from_dict(FILM_STOCK_MAP.get(film))
         camera_obj.film_stock = film_obj
 
         # Populate the film grain object with the selected film size if appropriate.
         if camera_obj.film_stock.film_grain:
-            camera_obj.film_stock.film_grain.film_size = camera_obj.film_format.name
+            camera_obj.film_stock.film_grain.film_size = camera_obj.film_format.id
 
-        illuminant = SOURCE_MAP.get(light_source)
+        illuminant = ILLUMINANT_MAP.get(light_source)
         camera_obj.illuminant_key = illuminant["key"] if illuminant else "D65"
 
         if filter != "None":

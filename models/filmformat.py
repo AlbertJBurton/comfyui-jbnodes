@@ -25,6 +25,7 @@ from .framesize import FrameSize
 
 @dataclass
 class FilmFormat:
+    id: str
     name: str
     description: str
     frame_size: FrameSize = field(default_factory=FrameSize)
@@ -33,6 +34,7 @@ class FilmFormat:
     @classmethod
     def from_dict(cls, data: dict):
         return cls(
+            id = data.get("id", ""),
             name = data.get("name", "Default 35mm"),
             description = data.get("description", "Default 35mm format"),
             frame_size = FrameSize.from_dict(data.get("frame_size", {})),

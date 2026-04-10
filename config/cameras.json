@@ -2,49 +2,49 @@
     "cameras": [
         {
             "name": "35mm SLR",
-            "film_format": "135",
+            "film_format": "51BB721E-3546-48DA-942B-A27B2DD89C9C",
             "lens": [
                 "50mm"
             ]
         },
         {
             "name": "Medium Format 6x4.5 SLR",
-            "film_format": "120 (6x4.5)",
+            "film_format": "C9B1F8A7-3E5B-4F2D-9C1A-8E5F6B2D4A1E",
             "lens": [
                 "80mm"
             ]
         },
         {
             "name": "Medium Format 6x6 SLR",
-            "film_format": "120 (6x6)",
+            "film_format": "A2D3E4F5-6B7C-8D9E-0F1A-2B3C4D5E6F7A",
             "lens": [
                 "80mm"
             ]
         },
         {
             "name": "Medium Format 6x7 SLR",
-            "film_format": "120 (6x7)",
+            "film_format": "B3C4D5E6-7F8A-9B0C-1D2E-3F4A5B6C7D8E",
             "lens": [
                 "80mm"
             ]
         },
         {
             "name": "Medium Format 6x9 SLR",
-            "film_format": "120 (6x9)",
+            "film_format": "C4D5E6F7-8A9B-0C1D-2E3F-4A5B6C7D8E9F",
             "lens": [
                 "80mm"
             ]
         },
         {
             "name": "Large Format 4x5",
-            "film_format": "4x5",
+            "film_format": "D5E6F7G8-9H0I-1J2K-3L4M-5N6O7P8Q9R0S",
             "lens": [
                 "150mm"
             ]
         },
         {
             "name": "Large Format 8x10",
-            "film_format": "8x10",
+            "film_format": "E6F7G8H9-0I1J-2K3L-4M5N-6O7P8Q9R0S1T",
             "lens": [
                 "300mm"
             ]

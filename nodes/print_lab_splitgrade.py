@@ -22,7 +22,7 @@ import numpy as np
 
 from PIL import Image, ImageOps
 
-from ..node_config import CONTRAST_NAMES, CONTRAST_MAP
+from ..node_config import CONTRAST_FILTER_NAMES, CONTRAST_FILTER_MAP
 
 from ..src.darkroom_lib import get_print_image
 
@@ -32,9 +32,9 @@ class PrintLabSplitGrade:
         return {
             "required": {
                 "film_negative": ("IMAGE",),
-                "contrast_filter_1": (CONTRAST_NAMES, {"default": "2"}),
+                "contrast_filter_1": (CONTRAST_FILTER_NAMES, {"default": "2"}),
                 "exposure_secs_1": ("FLOAT", {"default": 10.0, "min": 0.0, "max": 20.0, "step": 0.1}),
-                "contrast_filter_2": (CONTRAST_NAMES, {"default": "2"}),
+                "contrast_filter_2": (CONTRAST_FILTER_NAMES, {"default": "2"}),
                 "exposure_secs_2": ("FLOAT", {"default": 10.0, "min": 0.0, "max": 20.0, "step": 0.1}),
             },
         }
@@ -47,10 +47,10 @@ class PrintLabSplitGrade:
 
     def print_image(self, film_negative, contrast_filter_1, exposure_secs_1, contrast_filter_2, exposure_secs_2):
     
-        filter_data_1 = CONTRAST_MAP.get(contrast_filter_1)
+        filter_data_1 = CONTRAST_FILTER_MAP.get(contrast_filter_1)
         contrast_factor_1 = filter_data_1.get("factor")
     
-        filter_data_2 = CONTRAST_MAP.get(contrast_filter_2)
+        filter_data_2 = CONTRAST_FILTER_MAP.get(contrast_filter_2)
         contrast_factor_2 = filter_data_2.get("factor")
     
         image_1 = get_print_image(film_negative, contrast_factor = contrast_factor_1, exposure_secs = exposure_secs_1)

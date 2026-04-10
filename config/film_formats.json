@@ -1,6 +1,7 @@
 {
   "film_formats": [
     {
+      "id": "51BB721E-3546-48DA-942B-A27B2DD89C9C",
       "name": "135",
       "description": "Standard 35mm format. 36mm x 24mm frame size.",
       "frame_size": {
@@ -9,23 +10,24 @@
       },
       "latent_sizes": [
         {
-          "name": "Standard (768x512)",
-          "width": 768,
-          "height": 512
-        },
-        {
-          "name": "High Resolution (1152x768)",
+          "name": "Standard (1152 x 768)",
           "width": 1152,
           "height": 768
         },
         {
-          "name": "Ultra High Resolution (1536x1024)",
-          "width": 1536,
-          "height": 1024
+          "name": "High Resolution (1728 x 1152)",
+          "width": 1728,
+          "height": 1152
+        },
+        {
+          "name": "Ultra High Resolution (2304 x 1536)",
+          "width": 2304,
+          "height": 1536
         }
       ]
     },
     {
+      "id": "C9B1F8A7-3E5B-4F2D-9C1A-8E5F6B2D4A1E",
       "name": "120 (6x4.5)",
       "description": "Medium format. 60mm x 45mm frame size.",
       "frame_size": {
@@ -34,23 +36,24 @@
       },
       "latent_sizes": [
         {
-          "name": "Standard (768x576)",
-          "width": 768,
-          "height": 576
-        },
-        {
-          "name": "High Resolution (1024x768)",
-          "width": 1024,
-          "height": 768
-        },
-        {
-          "name": "Ultra High Resolution (1536x1152)",
+          "name": "Standard (1536 x 1152)",
           "width": 1536,
           "height": 1152
+        },
+        {
+          "name": "High Resolution (2304 x 1728)",
+          "width": 2304,
+          "height": 1728
+        },
+        {
+          "name": "Ultra High Resolution (3072 x 2304)",
+          "width": 3072,
+          "height": 2304
         }
       ]
     },
     {
+      "id": "A2D3E4F5-6B7C-8D9E-0F1A-2B3C4D5E6F7A",
       "name": "120 (6x6)",
       "description": "Medium format. 60mm x 60mm frame size.",
       "frame_size": {
@@ -59,23 +62,24 @@
       },
       "latent_sizes": [
         {
-          "name": "Standard (512x512)",
-          "width": 512,
-          "height": 512
+          "name": "Standard (1344 x 1344)",
+          "width": 1344,
+          "height": 1344
         },
         {
-          "name": "High Resolution (768x768)",
-          "width": 768,
-          "height": 768
+          "name": "High Resolution (1984 x 1984)",
+          "width": 1984,
+          "height": 1984
         },
         {
-          "name": "Ultra High Resolution (1024x1024)",
-          "width": 1024,
-          "height": 1024
+          "name": "Ultra High Resolution (2816 x 2816)",
+          "width": 2816,
+          "height": 2816
         }
       ]
     },
     {
+      "id": "B3C4D5E6-7F8A-9B0C-1D2E-3F4A5B6C7D8E",
       "name": "120 (6x7)",
       "description": "Medium format. 60mm x 70mm frame size.",
       "frame_size": {
@@ -84,23 +88,24 @@
       },
       "latent_sizes": [
         {
-          "name": "Standard (768x896)",
-          "width": 768,
-          "height": 896
+          "name": "Standard (1792 x 1536)",
+          "width": 1792,
+          "height": 1536
         },
         {
-          "name": "High Resolution (1152x1344)",
-          "width": 1152,
-          "height": 1344
+          "name": "High Resolution (2240 x 1920)",
+          "width": 2240,
+          "height": 1920
         },
         {
-          "name": "Ultra High Resolution (1536x1792)",
-          "width": 1536,
-          "height": 1792
+          "name": "Ultra High Resolution (3136 x 2688)",
+          "width": 3136,
+          "height": 2688
         }
       ]
     },
     {
+      "id": "C4D5E6F7-8A9B-0C1D-2E3F-4A5B6C7D8E9F",
       "name": "120 (6x9)",
       "description": "Medium format. 60mm x 90mm frame size.",
       "frame_size": {
@@ -109,23 +114,24 @@
       },
       "latent_sizes": [
         {
-          "name": "Standard (512x768)",
-          "width": 512,
-          "height": 768
-        },
-        {
-          "name": "High Resolution (768x1152)",
-          "width": 768,
+          "name": "Standard (1728 x 1152)",
+          "width": 1728,
           "height": 1152
         },
         {
-          "name": "Ultra High Resolution (1024x1536)",
-          "width": 1024,
+          "name": "High Resolution (2304 x 1536)",
+          "width": 2304,
           "height": 1536
+        },
+        {
+          "name": "Ultra High Resolution (3456 x 2304)",
+          "width": 3456,
+          "height": 2304
         }
       ]
     },
     {
+      "id": "D5E6F7G8-9H0I-1J2K-3L4M-5N6O7P8Q9R0S",
       "name": "4x5",
       "description": "Large format. 4 inch x 5 inch frame size.",
       "frame_size": {
@@ -134,23 +140,24 @@
       },
       "latent_sizes": [
         {
-          "name": "Standard (512x640)",
-          "width": 512,
-          "height": 640
+          "name": "Standard (1920 x 1536)",
+          "width": 1920,
+          "height": 1536
         },
         {
-          "name": "High Resolution (768x960)",
-          "width": 768,
-          "height": 960
+          "name": "High Resolution (2560 x 2048)",
+          "width": 2560,
+          "height": 2048
         },
         {
-          "name": "Ultra High Resolution (1024x1280)",
-          "width": 1024,
-          "height": 1280
+          "name": "Ultra High Resolution (3840 x 3072)",
+          "width": 3840,
+          "height": 3072
         }
       ]
     },
     {
+      "id": "E6F7G8H9-0I1J-2K3L-4M5N-6O7P8Q9R0S1T",
       "name": "8x10",
       "description": "Large format. 8 inch x 10 inch frame size.",
       "frame_size": {
@@ -159,19 +166,19 @@
       },
       "latent_sizes": [
         {
-          "name": "Standard (512x640)",
-          "width": 512,
-          "height": 640
+          "name": "Standard (2560 x 2048)",
+          "width": 2560,
+          "height": 2048
         },
         {
-          "name": "High Resolution (768x960)",
-          "width": 768,
-          "height": 960
+          "name": "High Resolution (3840 x 3072)",
+          "width": 3840,
+          "height": 3072
         },
         {
-          "name": "Ultra High Resolution (1024x1280)",
-          "width": 1024,
-          "height": 1280
+          "name": "Ultra High Resolution (4480 x 3584)",
+          "width": 4480,
+          "height": 3584
         }
       ]
     }

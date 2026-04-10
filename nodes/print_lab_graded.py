@@ -21,7 +21,7 @@ import torch
 
 from comfy import model_management
 
-from ..node_config import GRADED_PAPER_NAMES, GRADED_PAPER_MAP, CONTRAST_MAP
+from ..node_config import GRADED_PAPER_NAMES, GRADED_PAPER_MAP, CONTRAST_FILTER_MAP
 
 from ..src.darkroom_lib import get_print_image
 
@@ -63,7 +63,7 @@ class PrintLabGraded:
             hd_curve_points = torch.tensor(hd_curve_raw, dtype=torch.float32, device=device)
         else:
             # Fallback to the algorithmic method if no empirical data exists
-            filter_data = CONTRAST_MAP.get(grade)
+            filter_data = CONTRAST_FILTER_MAP.get(grade)
             contrast_factor = filter_data.get("factor")
 
         return get_print_image(film_negative, contrast_factor = contrast_factor, exposure_secs = exposure_secs, hd_curve_points = hd_curve_points, d_max = d_max, d_min = d_min, precision = precision)
