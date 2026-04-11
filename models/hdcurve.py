@@ -18,22 +18,26 @@
 '''
 
 from dataclasses import dataclass
-from typing import List
+from typing import List, Dict, Optional
+from .filmgrain import FilmGrain
 
 @dataclass
 class HDCurve:
+    id: str
     name: str
     time: float
     temp: float
     curve_points: List[List[float]]
+    film_grain: Optional[FilmGrain] = None
 
     @classmethod
-    def from_dict(cls, data: dict):
-
+    def from_dict(cls, data: dict, developer_name: str = "Generic Developer", film_grain: Optional[FilmGrain] = None):
         return cls(
-            name = data.get("name", "Generic Developer"),
+            id = data.get("id", "00000000-0000-0000-0000-000000000000"),
+            name = developer_name,
             time = float(data.get("time", 0.0)),
             temp = float(data.get("temp", 20.0)),
-            curve_points = data.get("curve_points", [])
+            curve_points = data.get("curve_points", []),
+            film_grain = film_grain
         )
 

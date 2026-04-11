@@ -71,6 +71,11 @@ class CameraLab:
         # Populate the film grain object with the selected film size if appropriate.
         if camera_obj.film_stock.film_grain:
             camera_obj.film_stock.film_grain.film_size = camera_obj.film_format.id
+            
+        if camera_obj.film_stock.hd_curves:
+            for curve in camera_obj.film_stock.hd_curves:
+                if curve.film_grain:
+                    curve.film_grain.film_size = camera_obj.film_format.id
 
         illuminant = ILLUMINANT_MAP.get(light_source)
         camera_obj.illuminant_key = illuminant["key"] if illuminant else "D65"

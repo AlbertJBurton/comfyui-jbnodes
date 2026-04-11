@@ -88,8 +88,15 @@ class DeveloperLab:
                     break
 
         # Apply the film grain to the linear image before applying the characteristic curve
-        if film_stock.film_grain and apply_film_grain and developer != "None":
-            image = get_film_grain_image(image, **film_stock.film_grain.__dict__)
+        if apply_film_grain and developer != "None":
+            grain_to_apply = None
+            if curve and curve.film_grain:
+                grain_to_apply = curve.film_grain
+            elif film_stock.film_grain:
+                grain_to_apply = film_stock.film_grain
+                
+            if grain_to_apply:
+                image = get_film_grain_image(image, **grain_to_apply.__dict__)
 
         slope = params.get("slope", 1.8)
         toe = params.get("toe", 0.2)

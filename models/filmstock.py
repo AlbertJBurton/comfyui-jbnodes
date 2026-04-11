@@ -17,7 +17,7 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 '''
 
-from ..node_config import FILM_FORMAT_NAMES, FILM_FORMAT_MAP
+from ..node_config import FILM_FORMAT_NAMES
 
 from dataclasses import dataclass, field
 from typing import List, Dict, Optional
@@ -31,10 +31,10 @@ class FilmStock:
     name: str
     description: str
     iso: int = 100
-    weights: List[float] = field(default_factory = lambda: [0.33, 0.33, 0.33])
-    params: Dict[str, float] = field(default_factory = lambda: {"slope": 1.8, "toe": 0.2, "shoulder": 0.8})
+    weights: Optional[List[float]] = None
+    params: Optional[Dict[str, float]] = None
     film_formats: Optional[List[str]] = None
-    film_grain: Optional[Dict[str, float]] = None
+    film_grain: Optional[FilmGrain] = None
     spectral_points: Optional[List[List[float]]] = None 
     hd_curves: Optional[List[HDCurve]] = None
 
@@ -43,13 +43,20 @@ class FilmStock:
         
         # Parse HD curves if they exist in the payload
         raw_hd_curves = data.get("hd_curves")
-        parsed_hd_curves = [HDCurve.from_dict(c) for c in raw_hd_curves] if raw_hd_curves else None
+        parsed_hd_curves = []
+        if raw_hd_curves:
+            for dev_group in raw_hd_curves:
+                dev_name = dev_group.get("developer", "Generic Developer")
+                raw_grain = dev_group.get("film_grain")
+                dev_grain = FilmGrain.from_dict(raw_grain) if raw_grain else None
+                for curve_data in dev_group.get("curves", []):
+                    parsed_hd_curves.append(HDCurve.from_dict(curve_data, developer_name=dev_name, film_grain=dev_grain))
+                    
         raw_film_grain = data.get("film_grain")
         parsed_film_grain = FilmGrain.from_dict(raw_film_grain) if raw_film_grain else None
 
-
         return cls(
-            id = data.get("id", "generic"),
+            id = data.get("id", "3F3836A6-8070-4F70-8086-520E47BB5143"),
             name = data.get("name", "Generic Film Stock"),
             description = data.get("description", ""),
             iso = int(data.get("iso", 100)),

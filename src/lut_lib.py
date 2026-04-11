@@ -59,10 +59,10 @@ def get_hd_curve_lut(hd_curve: HDCurve, precision: int = 4096, ei: float = 0.1, 
         return np.linspace(0, 255, precision, dtype=np.uint8)
     
     # Standard densitometry: Exposure UP -> Density UP.
-    # 1. Normalize Density (Y)
+    # Normalize Density (Y)
     yp_norm = (yp - yp_min) / density_range
 
-    # 2. Define Zone 0 (Base+Fog is yp_min)
+    # Define Zone 0 (Base+Fog is yp_min)
     zone_0_target = yp_min + ei
     idx = np.where(yp >= zone_0_target)[0]
         
@@ -90,7 +90,7 @@ def get_hd_curve_lut(hd_curve: HDCurve, precision: int = 4096, ei: float = 0.1, 
     
     xp_end = xp_start + log_e_stops
     
-    # 3. Generate LUT over the fixed window
+    # Generate LUT over the fixed window
     x_eval = np.linspace(0.0, 1.0, precision)
     
     # Map digital 0.0-1.0 exactly to the [xp_start, xp_end] LogE range

@@ -28,7 +28,7 @@ IMAGES_DIR = os.path.join(CURRENT_DIR, "images")
 CONFIG_DIR = os.path.join(CURRENT_DIR, "config")
 GLSL_DIR = os.path.join(CURRENT_DIR, "glsl")
 
-FILM_STOCK_JSON_PATH = os.path.join(CONFIG_DIR, "film_stocks.json")
+FILM_STOCK_JSON_PATH = os.path.join(CONFIG_DIR, "film_stocks_v2.json")
 FILM_FORMAT_JSON_PATH = os.path.join(CONFIG_DIR, "film_formats.json")
 FILTER_JSON_PATH = os.path.join(CONFIG_DIR, "wratten_filters.json")
 ILLUMINANT_JSON_PATH = os.path.join(CONFIG_DIR, "illuminants.json")
@@ -73,7 +73,10 @@ async def get_hd_curves(request):
             hd_curves = stock.get("hd_curves", [])
             if hd_curves:
                 # Format names as "Developer @ Time mins (Temp C)"
-                curves = [f"{c['name']} ({c['time']}m at {c['temp']}C)" for c in hd_curves]
+                for dev_group in hd_curves:
+                    dev_name = dev_group.get("developer", "Generic Developer")
+                    for c in dev_group.get("curves", []):
+                        curves.append(f"{dev_name} ({c['time']}m at {c['temp']}C)")
             break
                 
     return web.json_response(curves)
