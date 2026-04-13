@@ -138,9 +138,9 @@ FILM_FORMAT_MAP = {}
 FILM_FORMAT_NAMES = []
 FILM_FORMAT_NAME_TO_ID = {}
 for film_size in FORMAT_DATA["film_formats"]:
-        FILM_FORMAT_MAP[film_size["id"]] = film_size
-        FILM_FORMAT_NAMES.append(film_size["name"])
-        FILM_FORMAT_NAME_TO_ID[film_size["name"]] = film_size["id"]
+    FILM_FORMAT_MAP[film_size["id"]] = film_size
+    FILM_FORMAT_NAMES.append(film_size["name"])
+    FILM_FORMAT_NAME_TO_ID[film_size["name"]] = film_size["id"]
 
 GRAYSCALE_MAP = {}
 GRAYSCALE_NAMES = []
@@ -168,9 +168,11 @@ for filter in FILTER_DATA["filters"]:
 
 ILLUMINANT_MAP = {}
 ILLUMINANT_NAMES = []
-for source in ILLUMINANT_DATA["sources"]:
-    ILLUMINANT_MAP[source["label"]] = source
-    ILLUMINANT_NAMES.append(source["label"])
+ILLUMINANT_LABEL_TO_KEY = {}
+for illuminant in ILLUMINANT_DATA["illuminants"]:
+    ILLUMINANT_MAP[illuminant["key"]] = illuminant
+    ILLUMINANT_NAMES.append(illuminant["label"])
+    ILLUMINANT_LABEL_TO_KEY[illuminant["label"]] = illuminant["key"]
 
 CONTRAST_FILTER_MAP = {}
 CONTRAST_FILTER_NAMES = []

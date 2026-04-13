@@ -42,7 +42,7 @@ class DeveloperLab:
             "optional": {
                 "apply_film_grain": ("BOOLEAN", {"default": True}),
                 "precision": ("INT", {"default": 4096, "min": 256, "max": 65536, "step": 256}),
-                "exposure_index": ("FLOAT", {"default": 0.03, "min": 0.00, "max": 1.00, "step": 0.01}),
+                "exposure_index": ("FLOAT", {"default": 0.10, "min": 0.00, "max": 1.00, "step": 0.01}),
                 "N_development": ("INT", {"default": 0.0, "min": -3.0, "max": 3.0, "step": 1}),
             }        
         }
@@ -63,13 +63,14 @@ class DeveloperLab:
         if isinstance(camera_roll, Camera):
             film_stock = camera_roll.film_stock
             illuminant_key = camera_roll.illuminant_key
-            image = linear_to_srgb_torch(camera_roll.image)
+            #image = linear_to_srgb_torch(camera_roll.image)
+            image = camera_roll.image
         else:
             return (None, None) 
         
         if isinstance(film_stock, FilmStock):
-            weights = film_stock.weights
-            params = film_stock.params
+            weights = film_stock.weights if film_stock.weights is not None else [0.33, 0.33, 0.33]
+            params = film_stock.params if film_stock.params is not None else {"slope": 1.8, "toe": 0.2, "shoulder": 0.8}
             stock_name = film_stock.name
         else:
             stock_data = FILM_STOCK_MAP.get(film_stock, {})
@@ -98,19 +99,23 @@ class DeveloperLab:
             if grain_to_apply:
                 image = get_film_grain_image(image, **grain_to_apply.__dict__)
 
-        slope = params.get("slope", 1.8)
-        toe = params.get("toe", 0.2)
-        shoulder = params.get("shoulder", 0.8)
-
         # Get the characteristic curve LUT
         if not curve:
-            char_lut = get_generalized_sigmoid_lut(slope, toe, shoulder, precision)
+            char_lut = get_generalized_sigmoid_lut(params.get("slope"), params.get("toe"), params.get("shoulder"), precision)
         else:
             char_lut = get_hd_curve_lut(curve, precision, ei=exposure_index, dev_offset=N_development)
             try:
-                logging.info(f"[comfyui-jbnodes] applying {stock_name} - {curve.name} characteristic curve with EI: {exposure_index}, N-development: {N_development}")
+                logging.info(f"[comfyui-jbnodes] applying {stock_name} - {curve.name} ({curve.time}m at {curve.temp}C) characteristic curve with EI: {exposure_index}, N-development: {N_development}")
             except:
                 pass
 
-        return get_spectral_image(image, weights, None, illuminant_key, char_lut)
+        film_negative, contact_print = get_spectral_image(image, weights, None, illuminant_key, char_lut)
+
+        cprint_min = contact_print.min()
+        cprint_max = contact_print.max()
+        cprint_normalized = (contact_print - cprint_min) / (cprint_max - cprint_min)
+
+        contact_print = linear_to_srgb_torch(cprint_normalized)
+
+        return contact_print, film_negative
 

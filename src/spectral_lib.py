@@ -29,7 +29,7 @@ from .interpolate_lib import pchip_interpolate_numpy
 
 from comfy import model_management
 
-def get_spectral_image(image, weights, spectral_points, illuminant_name, char_lut, output_sRGB=True):
+def get_spectral_image(image, weights, spectral_points, illuminant_name, char_lut):
     '''
     Processes a batch of ComfyUI image tensors natively in PyTorch.
     Utilizes Smits 1999 spectral integration when raw coordinate data is available.
@@ -150,7 +150,7 @@ def get_spectral_image(image, weights, spectral_points, illuminant_name, char_lu
         latent_lin = latent_lin / max_val
 
     if char_lut is not None:    
-        # Apply Characteristic Curve (Linear -> Display sRGB Negative)
+        # Apply Characteristic Curve
         precision = char_lut.shape[0]
         
         # Scale 0.0-1.0 latent linear values to LUT indices
@@ -168,9 +168,6 @@ def get_spectral_image(image, weights, spectral_points, illuminant_name, char_lu
     else:
         # If no LUT provided, just output the linear latent image for preview
         out_rgb = latent_lin.unsqueeze(-1).expand(*latent_lin.shape, 3)
-
-    if output_sRGB:
-        out_rgb = linear_to_srgb_torch(out_rgb)
 
     if has_alpha:
         stacked_output = torch.cat([out_rgb, alpha], dim=-1)
@@ -192,9 +189,7 @@ def get_camera_image(image, camera):
         image (torch.Tensor): Shape (B, H, W, 3/4) tensor.
         camera (Camera): Camera object containing film stock and illuminant information.
         Returns:
-        Tuple of (final_image, preview_image) where:
-        - final_image is the processed image after spectral mapping (without LUT).
-        - preview_image is a sRGB version of the final image for quick visualization in ComfyUI.
+            Final_image: the processed image after spectral mapping.
     '''
 
     if camera.film_stock and camera.film_stock.spectral_points:
@@ -202,7 +197,6 @@ def get_camera_image(image, camera):
     else:
         logging.info(f"[comfyui-jbnodes] no spectral data found for {camera.film_stock.name}. Using fallback RGB weights.")
 
-    out_rgb, _ = get_spectral_image(image, camera.film_stock.weights, camera.film_stock.spectral_points, camera.illuminant_key, None, False)
-    preview_rgb = linear_to_srgb_torch(out_rgb)
+    out_rgb, _ = get_spectral_image(image, camera.film_stock.weights, camera.film_stock.spectral_points, camera.illuminant_key, None)
 
-    return out_rgb.cpu(), preview_rgb.cpu()
+    return out_rgb.cpu()

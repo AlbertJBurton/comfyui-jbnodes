@@ -19,6 +19,7 @@
 
 import torch
 import numpy as np
+import logging
 
 from ..models.hdcurve import HDCurve
 
@@ -56,7 +57,7 @@ def get_hd_curve_lut(hd_curve: HDCurve, precision: int = 4096, ei: float = 0.1, 
     density_range = yp_max - yp_min
     
     if density_range <= 0.0:
-        return np.linspace(0, 255, precision, dtype=np.uint8)
+        return np.linspace(0, 255, precision, dtype=np.float32)
     
     # Standard densitometry: Exposure UP -> Density UP.
     # Normalize Density (Y)
@@ -81,28 +82,32 @@ def get_hd_curve_lut(hd_curve: HDCurve, precision: int = 4096, ei: float = 0.1, 
         else:
             xp_start = xp[first_idx]
 
-    # The Zone System defines N development as 7 stops of dynamic range above Zone 0.
-    # We adjust this based on the dev_offset (e.g. -2 for N-2, +2 for N+2).
+    # We assume here that the Zone System defines N development as 7 stops of dynamic 
+    # range above Zone 0 and adjust based on the dev_offset (e.g. -2 for N-2, +2 for N+2).
     # 1 stop = log10(2) ≈ 0.30103 LogE units.
-    dynamic_range = (xp.max() - xp_start) / np.log10(2.0)
-    dynamic_range_stops = dynamic_range + dev_offset
-    log_e_stops = dynamic_range_stops * np.log10(2.0)
+    log_e_steps = (7.0 + dev_offset) * np.log10(2.0)
+    logging.info(f"dynamic range (log_e): {log_e_steps}")
     
-    xp_end = xp_start + log_e_stops
+    xp_end = xp_start + log_e_steps
     
-    # Generate LUT over the fixed window
+    # CRITICAL FIX: Convert linear pixel values to Log Exposure.
+    # The H&D curve x-axis is Log10(Exposure). Our input x_eval is Linear Exposure.
+    # We map the maximum linear value (1.0) to xp_end.
+    # We use a tiny epsilon to avoid log10(0) for pure black pixels.
     x_eval = np.linspace(0.0, 1.0, precision)
-    
-    # Map digital 0.0-1.0 exactly to the [xp_start, xp_end] LogE range
-    xp_eval = xp_start + (x_eval * (xp_end - xp_start))
-    
-    # Interpolate the normalized empirical density at these exact LogE points.
+    x_safe = np.clip(x_eval, 1e-10, 1.0)
+    xp_eval = np.log10(x_safe) + xp_end
+
+    # Interpolate the empirical density at these exact LogE points.
     # np.interp gracefully handles any xp_eval values extending past the 
     # original densitometer curve by clamping them to the nearest valid density.
-    y_eval = np.interp(xp_eval, xp, yp_norm)
+    y_eval = np.interp(xp_eval, xp, yp)
     
-    # Scale back to 8-bit space
-    lut = np.clip(y_eval * 255.0, 0, 255).astype(np.float32)
+    # Convert Optical Density to Transmittance (T = 10^-D)
+    t_eval = 10.0 ** (-y_eval)
+    
+    # Scale Transmittance for the LUT output 
+    lut = np.clip(t_eval * 255.0, 0, 255).astype(np.float32)    
     
     return lut.astype(np.uint8)
 
@@ -137,7 +142,13 @@ def get_generalized_sigmoid_lut(slope, toe, shoulder, precision):
         # This is a simplified mathematical model for visual characteristic simulation
         y[shoulder_mask] = y[shoulder_mask] * (1.0 - (x[shoulder_mask] - shoulder) * 0.5)
 
-    # Normalize to 0-255
-    lut = np.clip(y * 255.0, 0, 255).astype(np.float32) 
+    # Map the 0.0-1.0 normalized curve to a generic density range (e.g., D_min=0.2, D_max=2.4)
+    density = 0.2 + y * (2.4 - 0.2)
+    
+    # Convert Optical Density to Transmittance (T = 10^-D)
+    t_eval = 10.0 ** (-density)
+
+    # Scale back to 8-bit space
+    lut = np.clip(t_eval * 255.0, 0, 255).astype(np.float32) 
     
     return lut.astype(np.uint8)

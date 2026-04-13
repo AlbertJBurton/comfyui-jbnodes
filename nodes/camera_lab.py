@@ -17,8 +17,9 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 '''
 
-from ..node_config import CAMERA_MAP, BW_FILTER_NAMES, BW_FILTER_MAP, FILM_STOCK_MAP, FILM_FORMAT_MAP, FILM_FORMAT_NAME_TO_ID, ILLUMINANT_NAMES, ILLUMINANT_MAP
+from ..node_config import CAMERA_MAP, BW_FILTER_NAMES, BW_FILTER_MAP, FILM_STOCK_MAP, FILM_FORMAT_MAP, FILM_FORMAT_NAME_TO_ID, ILLUMINANT_NAMES, ILLUMINANT_MAP, ILLUMINANT_LABEL_TO_KEY
 
+from ..src.srgb_lib import linear_to_srgb_torch
 from ..src.spectral_lib import get_camera_image
 from ..src.filters_lib import get_filter_image
 
@@ -77,7 +78,8 @@ class CameraLab:
                 if curve.film_grain:
                     curve.film_grain.film_size = camera_obj.film_format.id
 
-        illuminant = ILLUMINANT_MAP.get(light_source)
+        illuminant_key = ILLUMINANT_LABEL_TO_KEY.get(light_source)
+        illuminant = ILLUMINANT_MAP.get(illuminant_key)
         camera_obj.illuminant_key = illuminant["key"] if illuminant else "D65"
 
         if filter != "None":
@@ -89,7 +91,8 @@ class CameraLab:
                 if isinstance(camera_obj.image, tuple):
                     camera_obj.image = camera_obj.image[0] if len(camera_obj.image) > 0 else camera_obj.image
 
-        camera_obj.image, preview = get_camera_image(camera_obj.image, camera_obj)
+        camera_obj.image = get_camera_image(camera_obj.image, camera_obj)
+        preview_srgb = linear_to_srgb_torch(camera_obj.image)
 
-        return(camera_obj, preview)
+        return(camera_obj, preview_srgb)
     

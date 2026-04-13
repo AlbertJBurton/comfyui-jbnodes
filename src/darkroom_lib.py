@@ -21,6 +21,7 @@ import torch
 
 from comfy import model_management
 
+from .srgb_lib import linear_to_srgb_torch
 from .lut_lib import apply_1d_lut
 from .interpolate_lib import pchip_interpolate_torch
 
@@ -107,5 +108,7 @@ def get_print_image(film_negative, contrast_factor=None, exposure_secs=10.0, hd_
 
     if has_alpha:
         result_tensor = torch.cat([result_tensor, alpha], dim=-1)
+
+    result_tensor = linear_to_srgb_torch(result_tensor)
 
     return (result_tensor.cpu(),)

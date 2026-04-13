@@ -27,6 +27,7 @@ from .filmformat import FilmFormat
 
 @dataclass
 class Camera:
+    id: str
     name: str
     illuminant_key: str
     film_format: Optional[FilmFormat] = None
@@ -40,6 +41,7 @@ class Camera:
         film_stock_data = data.get("film_stock")
 
         return cls(
+            id = data.get("id", "285E63ED-C3AA-4C79-B7C9-06CF58D73357"),
             name = data.get("name", "Generic Camera"),
             illuminant_key = data.get("illuminant_key", "D65"),
             film_format = FilmFormat.from_dict(film_format_data) if isinstance(film_format_data, dict) else None,

@@ -1,5 +1,5 @@
 {
-    "sources": [
+    "illuminants": [
         {
             "label": "Tungsten (2856 K)",
             "key": "A"

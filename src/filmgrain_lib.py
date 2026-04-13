@@ -97,9 +97,9 @@ def get_film_grain_image(image, **kwargs):
     vbo = ctx.buffer(vertices.tobytes())        
     
     try:
-        prog = ctx.program(vertex_shader=vertex_shader, fragment_shader=shader_code)
+        prog = ctx.program(vertex_shader = vertex_shader, fragment_shader = shader_code)
     except Exception as e:
-        logging.error(f"[comfyui-jbnodes] Shader Compilation Failed:\n{e}")
+        logging.error(f"[comfyui-jbnodes] Shader compilation failed:\n{e}\n")
         ctx.release()
         return (image,)
         

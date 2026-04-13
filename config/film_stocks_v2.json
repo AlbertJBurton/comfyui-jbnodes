@@ -2942,7 +2942,7 @@
             "halation": 0.2,
             "emulsion_softness": 0.4,
             "blend_mode": "Soft Light",
-            "luminance_peak_bias": 0.5,
+            "luminance_peak_bias": 0.2,
             "algorithmic_octaves": 3,
             "morphological_variance": 2.0,
             "temporal_entropy": 1.0
@@ -4595,7 +4595,7 @@
             "halation": 0.07,
             "emulsion_softness": 0.12,
             "blend_mode": "Soft Light",
-            "luminance_peak_bias": 0.5,
+            "luminance_peak_bias": 0.2,
             "algorithmic_octaves": 3,
             "morphological_variance": 2.0,
             "temporal_entropy": 1.0
@@ -5788,13 +5788,13 @@
           "film_grain": {
             "rms_granularity": 10.0,
             "emulsion_type": "Cubic",
-            "film_grit": 0.52,
-            "halation": 0.08,
-            "emulsion_softness": 0.16,
+            "film_grit": 0.40,
+            "halation": 0.05,
+            "emulsion_softness": 0.28,
             "blend_mode": "Soft Light",
-            "luminance_peak_bias": 0.5,
-            "algorithmic_octaves": 3,
-            "morphological_variance": 2.0,
+            "luminance_peak_bias": 0.18,
+            "algorithmic_octaves": 5,
+            "morphological_variance": 2.5,
             "temporal_entropy": 1.0
           },
           "curves": [
@@ -6391,13 +6391,13 @@
           "film_grain": {
             "rms_granularity": 10.0,
             "emulsion_type": "Cubic",
-            "film_grit": 0.52,
-            "halation": 0.08,
-            "emulsion_softness": 0.16,
+            "film_grit": 0.42,
+            "halation": 0.05,
+            "emulsion_softness": 0.20,
             "blend_mode": "Soft Light",
-            "luminance_peak_bias": 0.5,
-            "algorithmic_octaves": 3,
-            "morphological_variance": 2.0,
+            "luminance_peak_bias": 0.18,
+            "algorithmic_octaves": 5,
+            "morphological_variance": 1.8,
             "temporal_entropy": 1.0
           },
           "curves": [
@@ -7586,7 +7586,7 @@
             "halation": 0.1,
             "emulsion_softness": 0.15,
             "blend_mode": "Soft Light",
-            "luminance_peak_bias": 0.5,
+            "luminance_peak_bias": 0.2,
             "algorithmic_octaves": 3,
             "morphological_variance": 2.2,
             "temporal_entropy": 1.0
@@ -8400,7 +8400,7 @@
             "halation": 0.1,
             "emulsion_softness": 0.5,
             "blend_mode": "Soft Light",
-            "luminance_peak_bias": 0.5,
+            "luminance_peak_bias": 0.2,
             "algorithmic_octaves": 3,
             "morphological_variance": 1.6,
             "temporal_entropy": 1.0
@@ -9654,7 +9654,7 @@
             "halation": 0.11,
             "emulsion_softness": 0.21,
             "blend_mode": "Soft Light",
-            "luminance_peak_bias": 0.5,
+            "luminance_peak_bias": 0.2,
             "algorithmic_octaves": 3,
             "morphological_variance": 2.0,
             "temporal_entropy": 1.0

@@ -61,8 +61,8 @@ class FilmStock:
             description = data.get("description", ""),
             iso = int(data.get("iso", 100)),
             film_formats = data.get("film_formats", FILM_FORMAT_NAMES),  # Default to all formats if not specified
-            weights = data.get("weights", [0.33, 0.33, 0.33]),
-            params = data.get("params", {"slope": 1.8, "toe": 0.2, "shoulder": 0.8}),
+            weights = data.get("weights", None),
+            params = data.get("params", None),
             spectral_points = data.get("spectral_points", None),
             hd_curves = parsed_hd_curves,
             film_grain = parsed_film_grain

@@ -1,6 +1,7 @@
 {
     "cameras": [
         {
+            "id": "A98A203E-0F3A-45E4-AD0B-65AEF25B8887",
             "name": "35mm SLR",
             "film_format": "51BB721E-3546-48DA-942B-A27B2DD89C9C",
             "lens": [
@@ -8,6 +9,7 @@
             ]
         },
         {
+            "id": "9886A9B1-BC6D-4CEA-B13F-0C5619BAA614",
             "name": "Medium Format 6x4.5 SLR",
             "film_format": "C9B1F8A7-3E5B-4F2D-9C1A-8E5F6B2D4A1E",
             "lens": [
@@ -15,6 +17,7 @@
             ]
         },
         {
+            "id": "B7193C5F-959B-45FA-9535-F862CF6BE244",
             "name": "Medium Format 6x6 SLR",
             "film_format": "A2D3E4F5-6B7C-8D9E-0F1A-2B3C4D5E6F7A",
             "lens": [
@@ -22,6 +25,7 @@
             ]
         },
         {
+            "id": "A08AC938-FAFD-4B97-BDD6-3FE288AA11E8",
             "name": "Medium Format 6x7 SLR",
             "film_format": "B3C4D5E6-7F8A-9B0C-1D2E-3F4A5B6C7D8E",
             "lens": [
@@ -29,6 +33,7 @@
             ]
         },
         {
+            "id": "3106450F-6CFA-44D0-8352-5927A5EC8DC3",
             "name": "Medium Format 6x9 SLR",
             "film_format": "C4D5E6F7-8A9B-0C1D-2E3F-4A5B6C7D8E9F",
             "lens": [
@@ -36,6 +41,7 @@
             ]
         },
         {
+            "id": "51627013-F25E-4475-8F7A-B3ECAC59E9AC",
             "name": "Large Format 4x5",
             "film_format": "D5E6F7G8-9H0I-1J2K-3L4M-5N6O7P8Q9R0S",
             "lens": [
@@ -43,6 +49,7 @@
             ]
         },
         {
+            "id": "3CF3261D-04B9-4046-9A07-E9835CE26DD5",
             "name": "Large Format 8x10",
             "film_format": "E6F7G8H9-0I1J-2K3L-4M5N-6O7P8Q9R0S1T",
             "lens": [
