@@ -85,9 +85,7 @@ def get_hd_curve_lut(hd_curve: HDCurve, precision: int = 4096, ei: float = 0.1, 
     # We assume here that the Zone System defines N development as 7 stops of dynamic 
     # range above Zone 0 and adjust based on the dev_offset (e.g. -2 for N-2, +2 for N+2).
     # 1 stop = log10(2) ≈ 0.30103 LogE units.
-    log_e_steps = (7.0 + dev_offset) * np.log10(2.0)
-    logging.info(f"dynamic range (log_e): {log_e_steps}")
-    
+    log_e_steps = 7.0 * np.log10(2.0)
     xp_end = xp_start + log_e_steps
     
     # CRITICAL FIX: Convert linear pixel values to Log Exposure.
@@ -102,6 +100,14 @@ def get_hd_curve_lut(hd_curve: HDCurve, precision: int = 4096, ei: float = 0.1, 
     # np.interp gracefully handles any xp_eval values extending past the 
     # original densitometer curve by clamping them to the nearest valid density.
     y_eval = np.interp(xp_eval, xp, yp)
+
+    # Apply True N-Development (Contrast Scaling)
+    # N+1 increases contrast (slope). N-1 decreases contrast.
+    # We scale the density pivoting around Base+Fog (yp_min).
+    # A typical N+1 push increases the Contrast Index by roughly 15-20%.
+    if dev_offset != 0:
+        contrast_factor = 1.0 + (dev_offset * 0.15)
+        y_eval = yp_min + ((y_eval - yp_min) * contrast_factor)
     
     # Convert Optical Density to Transmittance (T = 10^-D)
     t_eval = 10.0 ** (-y_eval)
