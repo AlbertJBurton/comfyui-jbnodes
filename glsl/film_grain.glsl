@@ -27,6 +27,7 @@ uniform float rms_granularity; // RMS Granularity (e.g., 8 for T-MAX 100, 17 for
 uniform float morphological_variance; // Morphological Variance 
 uniform float luminance_peak_bias; // Luminance Peak Bias 
 uniform float temporal_entropy; // Temporal Entropy 
+uniform float shadow_dither; // Shadow Dither 
 uniform float film_grit; // Film Grit
 uniform float halation; // Halation Strength
 uniform int grain_type;     // Emulsion Type (0 = Cubic, 1 = Tabular)
@@ -317,6 +318,14 @@ void main() {
     
     vec3 grainBlend = clamp(vec3(n_final + 0.5), 0.0, 1.0);
     vec3 finalColor = applyBlend(baseColor.rgb, grainBlend, blend);
+
+    // Dynamic additive shadow dither to break posterization
+    // Apply raw unstructured noise directly to the darkest tones to bypass Soft Light attenuation
+    if (shadow_dither > 0.0) {
+        float shadow_mask = smoothstep(0.3, 0.0, L); 
+        finalColor += (n_raw - 0.5) * shadow_mask * shadow_dither * intensity;
+        finalColor = clamp(finalColor, 0.0, 1.0);
+    }
 
     FragColor = vec4(finalColor, baseColor.a);
 }

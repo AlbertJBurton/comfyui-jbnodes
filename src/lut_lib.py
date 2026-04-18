@@ -34,7 +34,7 @@ def apply_1d_lut(tensor, lut):
 
     return torch.lerp(lut[x_floor], lut[x_ceil], weight)
 
-def get_hd_curve_lut(hd_curve: HDCurve, precision: int = 4096, ei: float = 0.1, dev_offset: int = 0):
+def get_hd_curve_lut(hd_curve: HDCurve, precision: int = 4096, ei: float = 0.1, dev_offset: int = 0, dynamic_range: float = 10):
     '''
     Generates a Characteristic Curve LUT directly from an empirical HDCurve object.
     Uses the Zone System to map the digital 0.0-1.0 space to a dynamic range 
@@ -85,8 +85,10 @@ def get_hd_curve_lut(hd_curve: HDCurve, precision: int = 4096, ei: float = 0.1, 
     # We assume here that the Zone System defines N development as 7 stops of dynamic 
     # range above Zone 0 and adjust based on the dev_offset (e.g. -2 for N-2, +2 for N+2).
     # 1 stop = log10(2) ≈ 0.30103 LogE units.
-    log_e_steps = 7.0 * np.log10(2.0)
+    log_e_steps = dynamic_range * np.log10(2.0)
     xp_end = xp_start + log_e_steps
+
+    logging.info(f"esteps: {log_e_steps}, dr: {dynamic_range}")
     
     # CRITICAL FIX: Convert linear pixel values to Log Exposure.
     # The H&D curve x-axis is Log10(Exposure). Our input x_eval is Linear Exposure.

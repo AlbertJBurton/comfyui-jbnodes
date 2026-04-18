@@ -32,6 +32,7 @@ class FilmGrain:
     algorithmic_octaves: int = 3
     morphological_variance: float = 2.0
     temporal_entropy: float = 1.0
+    shadow_dither: float = 0.0
 
     @classmethod
     def from_dict(cls, data: dict):
@@ -46,5 +47,6 @@ class FilmGrain:
             luminance_peak_bias = float(data.get("luminance_peak_bias", 0.5)),
             algorithmic_octaves = int(data.get("algorithmic_octaves", 3)),
             morphological_variance = float(data.get("morphological_variance", 2.0)),
-            temporal_entropy = float(data.get("temporal_entropy", 1.0))
+            temporal_entropy = float(data.get("temporal_entropy", 1.0)),
+            shadow_dither = float(data.get("shadow_dither", 0.0))
         )

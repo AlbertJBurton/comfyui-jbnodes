@@ -38,9 +38,10 @@ class FilmGrainLab:
                 "emulsion_softness": ("FLOAT", {"default": 0.75, "min": 0.00, "max": 1.50, "step": 0.01}),
                 "blend_mode": (["Soft Light", "Overlay", "Linear Light"], {}),
                 "luminance_peak_bias": ("FLOAT", {"default": 0.50, "min": 0.00, "max": 1.00, "step": 0.01}),
-                "algorithmic_octaves": ("INT", {"default": 2, "min": 1, "max": 4, "step": 1}),
+                "algorithmic_octaves": ("INT", {"default": 2, "min": 1, "max": 10, "step": 1}),
                 "morphological_variance": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 2.0, "step": 0.1}),
                 "temporal_entropy": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 2.0, "step": 0.1}),
+                "shadow_dither": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 2.0, "step": 0.05}),
             },
         }
 

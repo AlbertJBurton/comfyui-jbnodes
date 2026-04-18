@@ -44,6 +44,7 @@ class DeveloperLab:
                 "precision": ("INT", {"default": 4096, "min": 256, "max": 65536, "step": 256}),
                 "exposure_index": ("FLOAT", {"default": 0.10, "min": 0.00, "max": 1.00, "step": 0.01}),
                 "N_development": ("INT", {"default": 0.0, "min": -3.0, "max": 3.0, "step": 1}),
+                "dynamic_range": ("FLOAT", {"default": 10.0, "min": 3.0, "max": 12, "step": 0.1})
             }        
         }
 
@@ -58,7 +59,7 @@ class DeveloperLab:
     CATEGORY = "JBNodes"
     DESCRIPTION = """Simulate black and white film stocks with customizable development processes."""
 
-    def build_spectral_image(self, camera_roll, apply_film_grain, precision, exposure_index, N_development, developer = None):
+    def build_spectral_image(self, camera_roll, apply_film_grain, precision, exposure_index, N_development, dynamic_range, developer = None):
         
         if isinstance(camera_roll, Camera):
             film_stock = camera_roll.film_stock
@@ -103,9 +104,9 @@ class DeveloperLab:
         if not curve:
             char_lut = get_generalized_sigmoid_lut(params.get("slope"), params.get("toe"), params.get("shoulder"), precision)
         else:
-            char_lut = get_hd_curve_lut(curve, precision, ei=exposure_index, dev_offset=N_development)
+            char_lut = get_hd_curve_lut(curve, precision, ei=exposure_index, dev_offset=N_development, dynamic_range=dynamic_range)
             try:
-                logging.info(f"[comfyui-jbnodes] applying {stock_name} - {curve.name} ({curve.time}m at {curve.temp}C) characteristic curve with EI: {exposure_index}, N-development: {N_development}")
+                logging.info(f"[comfyui-jbnodes] applying {stock_name} - {curve.name} ({curve.time}m at {curve.temp}C) characteristic curve with EI: {exposure_index}, N-development: {N_development}, dynamic range: {dynamic_range}.")
             except:
                 pass
 
