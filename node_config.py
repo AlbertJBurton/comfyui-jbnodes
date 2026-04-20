@@ -28,6 +28,7 @@ IMAGES_DIR = os.path.join(CURRENT_DIR, "images")
 CONFIG_DIR = os.path.join(CURRENT_DIR, "config")
 GLSL_DIR = os.path.join(CURRENT_DIR, "glsl")
 
+FILM_PROMPT_JSON_PATH = os.path.join(CONFIG_DIR, "film_stock_prompt_v2.json")
 FILM_STOCK_JSON_PATH = os.path.join(CONFIG_DIR, "film_stocks_v2.json")
 FILM_FORMAT_JSON_PATH = os.path.join(CONFIG_DIR, "film_formats.json")
 FILTER_JSON_PATH = os.path.join(CONFIG_DIR, "wratten_filters.json")
@@ -39,6 +40,9 @@ CAMERA_JSON_PATH = os.path.join(CONFIG_DIR, "cameras.json")
 
 with open(FILM_STOCK_JSON_PATH, 'r') as film:
     FILM_STOCK_DATA = json.load(film)
+
+with open(FILM_PROMPT_JSON_PATH, 'r') as prompt:
+    FILM_PROMPT_DATA = json.load(prompt)
 
 with open(FILM_FORMAT_JSON_PATH, 'r') as format:
     FORMAT_DATA = json.load(format)
@@ -127,12 +131,34 @@ async def get_film_stocks(request):
 
     return web.json_response(films)
 
+# Prompt Deck -> Sets API route
+@PromptServer.instance.routes.get("/jbnodes/deck_sets")
+async def get_deck_sets(request):
+    """Returns a list of sets for a given prompt deck by name."""
+    deck_name = request.rel_url.query.get("deck_name", "")
+    sets = []
+
+    for deck in FILM_PROMPT_DATA.get("decks", []):
+        if deck.get("film_stock") == deck_name:
+            sets = deck.get("sets", [])
+            if sets:
+                sets = [f"{s['name']}" for s in sets]
+            break
+
+    return web.json_response(sets)
+
 # Create mappings
 FILM_STOCK_MAP = {}
 FILM_STOCK_NAMES = []
 for stock in FILM_STOCK_DATA["film_stocks"]:
     FILM_STOCK_MAP[stock["name"]] = stock
     FILM_STOCK_NAMES.append(stock["name"])
+
+FILM_PROMPT_DECK_MAP = {}
+FILM_PROMPT_DECK_NAMES = []
+for deck in FILM_PROMPT_DATA["decks"]:
+    FILM_PROMPT_DECK_MAP[deck["film_stock"]] = deck
+    FILM_PROMPT_DECK_NAMES.append(deck["film_stock"])
 
 FILM_FORMAT_MAP = {}
 FILM_FORMAT_NAMES = []

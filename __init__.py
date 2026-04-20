@@ -30,6 +30,7 @@ try:
     from .nodes.grayscale_lab import GrayscaleLab
     from .nodes.color_chart_Image import ColorChartImageLoader
     from .nodes.merge_rgb_channels import MergeRGBImageChannel
+    from .nodes.prompt_lab import PromptLab
 except ImportError as e:
     failed_status = True
     print("\033[31m[comfyui-jbnodes]\033[0m Warning: Failed to import utility nodes. Some functionality may be limited. Error details: {}".format(e))
@@ -75,6 +76,7 @@ NODE_CLASS_MAPPINGS = {
     "ColorChartImageLoader": ColorChartImageLoader,
     "MergeRGBImageChannel": MergeRGBImageChannel,
     "PrintLabSplitGrade": PrintLabSplitGrade,
+    "PromptLab": PromptLab,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
@@ -90,6 +92,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "PrintLabSplitGrade": "Darkroom Enlarger (Split Grade)",
     "PrintLabMultigrade": "Darkroom Enlarger (Multigrade)",
     "PrintLabGraded": "Darkroom Enlarger",
+    "PromptLab": "Film Stock Prompt Manager",
 }
 
 WEB_DIRECTORY = "./web"
