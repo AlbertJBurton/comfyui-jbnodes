@@ -30,9 +30,6 @@ class PromptLab:
         deck_dict = FILM_PROMPT_DECK_MAP.get(deck, {})
 
         model_name = deck_dict.get("model_name", "")
-        boilerplate = deck_dict.get("prompts_boilerplate", "")
-        positive_boilerplate = boilerplate.get("positive", "")
-        negative_boilerplate = boilerplate.get("negative", "")
 
         filename = f"{model_name}_{deck}_{set}_Prompt-{prompt_index}".replace(" ", "_").replace("/", "_").replace("_&_", "_")
 
@@ -57,6 +54,7 @@ class PromptLab:
             print(f"[comfyui-jbnodes] Warning: Prompt index {prompt_index} is out of range for set '{set}' of deck '{deck}'.")
             return ("") 
         
-        prompt = prompts[prompt_index - 1] + " " + positive_boilerplate
+        positive_prompt = prompts[prompt_index - 1][0]
+        negative_prompt = prompts[prompt_index - 1][1]
 
-        return (prompt, negative_boilerplate, filename)
+        return (positive_prompt, negative_prompt, filename)

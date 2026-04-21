@@ -35,7 +35,7 @@ def get_film_grain_image(image, **kwargs):
         
     if moderngl is None:
         logging.error("[comfyui-jbnodes] moderngl is not installed. Please run: pip install moderngl")
-        return (image,)
+        return image
 
     batch_size, height, width, channels = image.shape
 
@@ -71,7 +71,7 @@ def get_film_grain_image(image, **kwargs):
             vertex_shader = f.read()
     except FileNotFoundError:
         logging.error("[comfyui-jbnodes] Shader GLSL file not found.")
-        return (image,)
+        return image
 
     try:
         # Force EGL backend. Ubuntu 24.04 (Wayland) explicitly blocks headless GLX/X11 
@@ -83,7 +83,7 @@ def get_film_grain_image(image, **kwargs):
             ctx = moderngl.create_context(standalone=True)
         except Exception as e2:
             logging.error(f"[comfyui-jbnodes] Failed to initialize moderngl context: {e2}")
-            return (image,)
+            return image
 
     # Simple 2D full screen quad
     vertices = np.array([
@@ -101,7 +101,7 @@ def get_film_grain_image(image, **kwargs):
     except Exception as e:
         logging.error(f"[comfyui-jbnodes] Shader compilation failed:\n{e}\n")
         ctx.release()
-        return (image,)
+        return image
         
     vao = ctx.vertex_array(prog, [(vbo, '2f 2f', 'in_vert', 'in_texcoord')])
     out_images = []
