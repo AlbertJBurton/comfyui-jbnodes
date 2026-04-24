@@ -88,7 +88,7 @@ def get_hd_curve_lut(hd_curve: HDCurve, precision: int = 4096, ei: float = 0.1, 
     log_e_steps = dynamic_range * np.log10(2.0)
     xp_end = xp_start + log_e_steps
 
-    logging.info(f"esteps: {log_e_steps}, dr: {dynamic_range}")
+    # logging.info(f"esteps: {log_e_steps}, dr: {dynamic_range}")
     
     # CRITICAL FIX: Convert linear pixel values to Log Exposure.
     # The H&D curve x-axis is Log10(Exposure). Our input x_eval is Linear Exposure.

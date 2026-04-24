@@ -241,6 +241,7 @@
         },
         {
             "name": "Ilford / Ilfobrom Galerie FB Glossy / Grade 2",
+            "grade": "2",
             "d_max": 2.215,
             "d_min": 0.0,
             "hd_curve_points": [

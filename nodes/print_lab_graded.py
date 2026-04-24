@@ -17,7 +17,10 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 '''
 
+import logging
+
 import torch
+import numpy as np
 
 from comfy import model_management
 
@@ -34,7 +37,7 @@ class PrintLabGraded:
             },
             "optional": {
                 "graded_paper": (GRADED_PAPER_NAMES, {"default": "Ilford / Ilfobrom Galerie FB / Grade 2"}),
-                "exposure_secs": ("FLOAT", {"default": 10.0, "min": 0.0, "max": 60.0, "step": 0.1}),
+                "exposure_secs": ("FLOAT", {"default": 10, "min": 0, "max": 60, "step": 1}),
                 "precision": ("INT", {"default": 4096, "min": 256, "max": 65536, "step": 256}),
             },
         }
@@ -51,8 +54,9 @@ class PrintLabGraded:
         
         # Read the raw empirical points
         hd_curve_raw = paper_data.get("hd_curve_points", None)
-        d_max = paper_data.get("d_max", 2.1)
-        d_min = paper_data.get("d_min", 0.04)
+        d_max = max(p[1] for p in hd_curve_raw) * 0.9 if hd_curve_raw is not None else paper_data.get("d_max", 2.1) * 0.9
+        d_min = min(p[1] for p in hd_curve_raw) + 0.1 if hd_curve_raw is not None else paper_data.get("d_min", 0.04) + 0.1
+        logging.info(f"Using paper: {graded_paper}, D_max: {d_max}, D_min: {d_min}")
         
         hd_curve_points = None
         contrast_factor = None

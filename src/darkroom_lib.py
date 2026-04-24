@@ -108,7 +108,6 @@ def get_print_image(film_negative, contrast_factor=None, exposure_secs=10.0, hd_
 
     if has_alpha:
         result_tensor = torch.cat([result_tensor, alpha], dim=-1)
-
-    result_tensor = linear_to_srgb_torch(result_tensor)
+        result_tensor = linear_to_srgb_torch(result_tensor)
 
     return (result_tensor.cpu(),)

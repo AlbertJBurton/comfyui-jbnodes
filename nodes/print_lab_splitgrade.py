@@ -33,9 +33,9 @@ class PrintLabSplitGrade:
             "required": {
                 "film_negative": ("IMAGE",),
                 "contrast_filter_1": (CONTRAST_FILTER_NAMES, {"default": "2"}),
-                "exposure_secs_1": ("FLOAT", {"default": 10.0, "min": 0.0, "max": 20.0, "step": 0.1}),
+                "exposure_secs_1": ("FLOAT", {"default": 10, "min": 0, "max": 60, "step": 1}),
                 "contrast_filter_2": (CONTRAST_FILTER_NAMES, {"default": "2"}),
-                "exposure_secs_2": ("FLOAT", {"default": 10.0, "min": 0.0, "max": 20.0, "step": 0.1}),
+                "exposure_secs_2": ("FLOAT", {"default": 10, "min": 0, "max": 60, "step": 1}),
             },
         }
     

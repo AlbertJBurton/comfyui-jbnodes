@@ -30,7 +30,7 @@ class PrintLabMultigrade:
             },
             "optional": {
                 "contrast_filter": (CONTRAST_FILTER_NAMES, {"default": "2"}),
-                "exposure_secs": ("FLOAT", {"default": 10.0, "min": 0.0, "max": 20.0, "step": 0.1}),
+                "exposure_secs": ("FLOAT", {"default": 10, "min": 0, "max": 60, "step": 1}),
             },
         }
     
