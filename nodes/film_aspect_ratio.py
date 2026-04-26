@@ -40,7 +40,7 @@ class FilmAspectRatio:
     def VALIDATE_INPUTS(s, resolution):
         return True
 
-    RETURN_TYPES = ("FLOAT", "FLOAT", "LATENT", "FILMFORMAT")
+    RETURN_TYPES = ("INT", "INT", "LATENT", "FILMFORMAT")
     RETURN_NAMES = ("width", "height", "empty_latent", "film_format")
     FUNCTION = "get_aspect_ratio"
     CATEGORY = "JBNodes/Utility"

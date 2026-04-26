@@ -44,7 +44,7 @@ class DeveloperLab:
                 "precision": ("INT", {"default": 4096, "min": 256, "max": 65536, "step": 256}),
                 "exposure_index": ("FLOAT", {"default": 0.10, "min": 0.00, "max": 1.00, "step": 0.01}),
                 "N_development": ("INT", {"default": 0.0, "min": -3.0, "max": 3.0, "step": 1}),
-                "dynamic_range": ("FLOAT", {"default": 10.0, "min": 3.0, "max": 20.0, "step": 0.1})
+                "dynamic_range": ("FLOAT", {"default": 10.0, "min": 3.0, "max": 12.0, "step": 0.1})
             }        
         }
 
