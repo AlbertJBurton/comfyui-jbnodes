@@ -28,7 +28,7 @@ IMAGES_DIR = os.path.join(CURRENT_DIR, "images")
 CONFIG_DIR = os.path.join(CURRENT_DIR, "config")
 GLSL_DIR = os.path.join(CURRENT_DIR, "glsl")
 
-FILM_PROMPT_JSON_PATH = os.path.join(CONFIG_DIR, "film_stock_prompt_v3.json")
+FILM_PROMPT_JSON_PATH = os.path.join(CONFIG_DIR, "film_stock_prompt_v4.json")
 FILM_STOCK_JSON_PATH = os.path.join(CONFIG_DIR, "film_stocks_v2.json")
 FILM_FORMAT_JSON_PATH = os.path.join(CONFIG_DIR, "film_formats.json")
 FILTER_JSON_PATH = os.path.join(CONFIG_DIR, "wratten_filters.json")
