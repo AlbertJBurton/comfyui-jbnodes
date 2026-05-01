@@ -31,6 +31,7 @@ try:
     from .nodes.color_chart_Image import ColorChartImageLoader
     from .nodes.merge_rgb_channels import MergeRGBImageChannel
     from .nodes.prompt_lab import PromptLab
+    from .nodes.camera_image_pipe import CameraImagePipeLoader, CameraImagePipeDecomposer, CameraImagePipeComposer
 except ImportError as e:
     failed_status = True
     print("\033[31m[comfyui-jbnodes]\033[0m Warning: Failed to import utility nodes. Some functionality may be limited. Error details: {}".format(e))
@@ -77,6 +78,9 @@ NODE_CLASS_MAPPINGS = {
     "MergeRGBImageChannel": MergeRGBImageChannel,
     "PrintLabSplitGrade": PrintLabSplitGrade,
     "PromptLab": PromptLab,
+    "CameraImagePipeLoader": CameraImagePipeLoader,
+    "CameraImagePipeDecomposer": CameraImagePipeDecomposer,
+    "CameraImagePipeComposer": CameraImagePipeComposer,
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
@@ -93,6 +97,9 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "PrintLabMultigrade": "Darkroom Enlarger (Multigrade)",
     "PrintLabGraded": "Darkroom Enlarger",
     "PromptLab": "Film Stock Prompt Manager",
+    "CameraImagePipeLoader": "Camera Image Pipe Loader",
+    "CameraImagePipeDecomposer": "Camera Image Pipe Decomposer",
+    "CameraImagePipeComposer": "Camera Image Pipe Composer",
 }
 
 WEB_DIRECTORY = "./web"

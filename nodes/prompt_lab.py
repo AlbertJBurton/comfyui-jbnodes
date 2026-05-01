@@ -8,7 +8,7 @@ class PromptLab:
             "required": { 
                 "deck": (FILM_PROMPT_DECK_NAMES, {}),
                 "set": ([None], {}),
-                "prompt_index": ("INT", {"default": 1, "min": 1, "max": 50, "step": 1}),
+                "prompt_index": ("INT", {"default": 1, "min": 1, "max": 50, "step": 1, "control_after_generate": True}),
             },
             "optional": {
                 "prepend_positive": ("STRING", {"default": ""}),
@@ -58,7 +58,7 @@ class PromptLab:
         
         filename = f"{model_name}_{set_dict.get('abbr', '')}_Prompt-{prompt_index}".replace(" ", "_").replace("/", "_").replace("_&_", "_")
 
-        positive_prompt =  prepend_positive + " " + prompts[prompt_index - 1][0] + " " + boilerplate_positive
-        negative_prompt =  prepend_negative + " " + prompts[prompt_index - 1][1] + " " + boilerplate_negative
+        positive_prompt =  prepend_positive + ", " + prompts[prompt_index - 1][0] + ", " + boilerplate_positive
+        negative_prompt =  prepend_negative + ", " + prompts[prompt_index - 1][1] + ", " + boilerplate_negative
 
         return (positive_prompt, negative_prompt, filename)
