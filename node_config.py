@@ -139,7 +139,7 @@ async def get_deck_sets(request):
     sets = []
 
     for deck in FILM_PROMPT_DATA.get("decks", []):
-        if deck.get("film_stock") == deck_name:
+        if deck.get("display_name") == deck_name:
             sets = deck.get("sets", [])
             if sets:
                 sets = [f"{s['name']}" for s in sets]
@@ -157,8 +157,8 @@ for stock in FILM_STOCK_DATA["film_stocks"]:
 FILM_PROMPT_DECK_MAP = {}
 FILM_PROMPT_DECK_NAMES = []
 for deck in FILM_PROMPT_DATA["decks"]:
-    FILM_PROMPT_DECK_MAP[deck["film_stock"]] = deck
-    FILM_PROMPT_DECK_NAMES.append(deck["film_stock"])
+    FILM_PROMPT_DECK_MAP[deck["display_name"]] = deck
+    FILM_PROMPT_DECK_NAMES.append(deck["display_name"])
 
 FILM_FORMAT_MAP = {}
 FILM_FORMAT_NAMES = []

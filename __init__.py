@@ -17,7 +17,7 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 '''
 
-__version__ = "0.3.0"
+__version__ = "0.4.0"
 
 failed_status = False
 
