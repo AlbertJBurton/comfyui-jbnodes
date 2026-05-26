@@ -64,7 +64,7 @@ class CropFilmAspectRatio:
 
         # Use a small tolerance for floating point comparisons to prevent microscopic 1-pixel jitters
         if abs(current_aspect - target_aspect) < 0.001:
-            return (image,)
+            return (image, film_format_obj)
         
         # Calculate Target Dimensions
         if current_aspect > target_aspect:
