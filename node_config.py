@@ -38,32 +38,28 @@ PAPER_JSON_PATH = os.path.join(CONFIG_DIR, "papers.json")
 GRAYSCALE_JSON_PATH = os.path.join(CONFIG_DIR, "grayscale.json")
 CAMERA_JSON_PATH = os.path.join(CONFIG_DIR, "cameras.json")
 
-with open(FILM_STOCK_JSON_PATH, 'r') as film:
-    FILM_STOCK_DATA = json.load(film)
+def _load_json(path, default=None):
+    """Safely load a JSON file, returning default (empty dict) on failure."""
+    try:
+        with open(path, 'r') as f:
+            return json.load(f)
+    except FileNotFoundError:
+        print(f"[comfyui-jbnodes] WARNING: Config file not found: {path}")
+    except json.JSONDecodeError as e:
+        print(f"[comfyui-jbnodes] ERROR: Malformed JSON in {path}: {e}")
+    except Exception as e:
+        print(f"[comfyui-jbnodes] ERROR: Failed to load {path}: {e}")
+    return default if default is not None else {}
 
-with open(FILM_PROMPT_JSON_PATH, 'r') as prompt:
-    FILM_PROMPT_DATA = json.load(prompt)
-
-with open(FILM_FORMAT_JSON_PATH, 'r') as format:
-    FORMAT_DATA = json.load(format)
-
-with open(FILTER_JSON_PATH, 'r') as filter:
-    FILTER_DATA = json.load(filter)
-
-with open(ILLUMINANT_JSON_PATH, 'r') as source:
-    ILLUMINANT_DATA = json.load(source)
-
-with open(CONTRAST_FILTER_JSON_PATH, 'r') as contrast:
-    CONTRAST_FILTER_DATA = json.load(contrast)
-
-with open(PAPER_JSON_PATH, 'r') as paper:
-    PAPER_DATA = json.load(paper)
-
-with open(CAMERA_JSON_PATH, 'r') as camera:
-    CAMERA_DATA = json.load(camera)
-
-with open(GRAYSCALE_JSON_PATH, 'r') as grayscale:
-    GRAYSCALE_DATA = json.load(grayscale)
+FILM_STOCK_DATA = _load_json(FILM_STOCK_JSON_PATH, {"film_stocks": []})
+FILM_PROMPT_DATA = _load_json(FILM_PROMPT_JSON_PATH, {"decks": []})
+FORMAT_DATA = _load_json(FILM_FORMAT_JSON_PATH, {"film_formats": []})
+FILTER_DATA = _load_json(FILTER_JSON_PATH, {"filters": []})
+ILLUMINANT_DATA = _load_json(ILLUMINANT_JSON_PATH, {"illuminants": []})
+CONTRAST_FILTER_DATA = _load_json(CONTRAST_FILTER_JSON_PATH, {"filters": []})
+PAPER_DATA = _load_json(PAPER_JSON_PATH, {"graded_papers": []})
+CAMERA_DATA = _load_json(CAMERA_JSON_PATH, {"cameras": []})
+GRAYSCALE_DATA = _load_json(GRAYSCALE_JSON_PATH, {"grayscale": []})
 
 # H&D Curves API route
 @PromptServer.instance.routes.get("/jbnodes/hd_curves")
