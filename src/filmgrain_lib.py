@@ -55,7 +55,7 @@ def get_film_grain_image(image, **kwargs):
         film_width = film_format.frame_size.width
     else:
         film_width = 36.0
-        logging.warning("[comfyui-jbnodes] Film format ({film_size_str}) could not be loaded, reverting to default 135 size (36mm).")
+        logging.warning(f"[comfyui-jbnodes] Film format ({film_size_str}) could not be loaded, reverting to default 135 size (36mm).")
 
         
     grain_type = 0 if kwargs.get("emulsion_type", "Cubic") == "Cubic" else 1
