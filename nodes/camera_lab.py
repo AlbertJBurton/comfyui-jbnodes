@@ -17,7 +17,7 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 '''
 
-from ..node_config import CAMERA_MAP, BW_FILTER_NAMES, BW_FILTER_MAP, FILM_STOCK_MAP, FILM_FORMAT_MAP, FILM_FORMAT_NAME_TO_ID, ILLUMINANT_NAMES, ILLUMINANT_MAP, ILLUMINANT_LABEL_TO_KEY
+from ..node_config import CAMERA_MAP, CAMERA_NAMES, BW_FILTER_NAMES, BW_FILTER_MAP, FILM_STOCK_MAP, FILM_STOCK_NAMES, FILM_FORMAT_MAP, FILM_FORMAT_NAME_TO_ID, ILLUMINANT_NAMES, ILLUMINANT_MAP, ILLUMINANT_LABEL_TO_KEY
 
 from ..src.srgb_lib import linear_to_srgb_torch
 from ..src.spectral_lib import get_camera_image
@@ -43,9 +43,14 @@ class CameraLab:
             }
         }
 
-    # Bypass ComfyUI's strict dropdown validation for dynamic widgets
+    # Validate API inputs — browser JS cascade prevents invalid selections,
+    # but the API path bypasses it and can send any string.
     @classmethod
     def VALIDATE_INPUTS(s, camera, film):
+        if camera not in ("None", None) and camera not in CAMERA_NAMES:
+            return f"Unknown camera '{camera}'"
+        if film not in ("None", None) and film not in FILM_STOCK_NAMES:
+            return f"Unknown film '{film}'"
         return True
 
     RETURN_TYPES = ("CAMERA", "IMAGE")
@@ -55,7 +60,10 @@ class CameraLab:
     DESCRIPTION = """Classic black-and-white film camera simulation."""
 
     def get_camera(self, image, film_format, camera, filter, film, light_source):
-        camera_obj = Camera.from_dict(CAMERA_MAP.get(camera))
+        camera_data = CAMERA_MAP.get(camera)
+        if not camera_data:
+            raise ValueError(f"[comfyui-jbnodes] Unknown camera '{camera}'.")
+        camera_obj = Camera.from_dict(camera_data)
         camera_obj.image = image
 
         if isinstance(film_format, FilmFormat):
@@ -66,16 +74,19 @@ class CameraLab:
             film_format_id = FILM_FORMAT_NAME_TO_ID.get(film_format, film_format)
             camera_obj.film_format = FilmFormat.from_dict(FILM_FORMAT_MAP.get(film_format_id, {}))
 
-        film_obj = FilmStock.from_dict(FILM_STOCK_MAP.get(film))
+        film_data = FILM_STOCK_MAP.get(film)
+        if not film_data and film not in ("None", None):
+            raise ValueError(f"[comfyui-jbnodes] Unknown film '{film}'.")
+        film_obj = FilmStock.from_dict(film_data) if film_data else None
         camera_obj.film_stock = film_obj
 
         # Populate the film grain object with the selected film size if appropriate.
-        if camera_obj.film_stock.film_grain:
+        if film_obj and camera_obj.film_stock and camera_obj.film_stock.film_grain:
             camera_obj.film_stock.film_grain.film_size = camera_obj.film_format.id
             
-        if camera_obj.film_stock.hd_curves:
+        if film_obj and camera_obj.film_stock and camera_obj.film_stock.hd_curves:
             for curve in camera_obj.film_stock.hd_curves:
-                if curve.film_grain:
+                if curve and curve.film_grain:
                     curve.film_grain.film_size = camera_obj.film_format.id
 
         illuminant_key = ILLUMINANT_LABEL_TO_KEY.get(light_source)
