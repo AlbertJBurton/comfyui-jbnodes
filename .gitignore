@@ -201,6 +201,9 @@ cython_debug/
 .cursorignore
 .cursorindexingignore
 
+# Internal analysis — not for upstream
+BW_COMPARATIVE_ANALYSIS.md
+
 # Marimo
 marimo/_static/
 marimo/_lsp/
