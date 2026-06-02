@@ -43,7 +43,7 @@ finally:
 try:
     from .nodes.camera_lab import CameraLab
     from .nodes.filter_lab import FilterLab
-    from .nodes.film_grain_lab import FilmGrainLab
+    from .nodes.film_grain_lab import FilmGrainLab, FilmGrainNode
     from .nodes.developer_lab import DeveloperLab
 except ImportError as e:
     failed_status = True
@@ -72,6 +72,7 @@ NODE_CLASS_MAPPINGS = {
     "GrayscaleLab": GrayscaleLab,
     "CameraLab": CameraLab,
     "FilmGrainLab": FilmGrainLab,
+    "FilmGrainNode": FilmGrainNode,
     "CropFilmAspectRatio": CropFilmAspectRatio,
     "FilmAspectRatio": FilmAspectRatio,
     "ColorChartImageLoader": ColorChartImageLoader,
@@ -89,6 +90,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "GrayscaleLab": "Grayscale Image",
     "CameraLab": "B&W Film Camera",
     "FilmGrainLab": "Film Grain",
+    "FilmGrainNode": "Film Grain (Standalone)",
     "CropFilmAspectRatio": "Crop Film Aspect Ratio",
     "FilmAspectRatio": "Film Aspect Ratio",
     "ColorChartImageLoader": "Color Test Chart Image",
